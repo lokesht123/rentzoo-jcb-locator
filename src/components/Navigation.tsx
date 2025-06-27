@@ -44,10 +44,12 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
-            <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
-              <Phone className="mr-2 h-4 w-4" />
-              Book Now
-            </Button>
+            <Link to="/auth">
+              <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                <Phone className="mr-2 h-4 w-4" />
+                Join RentZoo
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -77,10 +79,12 @@ const Navigation = () => {
                   {item.name}
                 </Link>
               ))}
-              <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 w-full">
-                <Phone className="mr-2 h-4 w-4" />
-                Book Now
-              </Button>
+              <Link to="/auth">
+                <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 w-full">
+                  <Phone className="mr-2 h-4 w-4" />
+                  Join RentZoo
+                </Button>
+              </Link>
             </div>
           </div>
         )}

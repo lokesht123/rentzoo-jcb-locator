@@ -179,9 +179,11 @@ const Index = () => {
             <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
             <p className="text-xl mb-8 opacity-90">Join thousands of contractors who trust RentZoo</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" variant="secondary" className="bg-white text-orange-600 hover:bg-gray-100">
-                Book Now
-              </Button>
+              <Link to="/auth">
+                <Button size="lg" variant="secondary" className="bg-white text-orange-600 hover:bg-gray-100">
+                  Join Now
+                </Button>
+              </Link>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-orange-600">
                 <Phone className="mr-2 h-5 w-5" />
                 Call Support
