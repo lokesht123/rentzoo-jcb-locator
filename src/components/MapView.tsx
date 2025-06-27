@@ -1,59 +1,100 @@
 
-import { MapPin, Navigation } from "lucide-react";
+import React, { useState } from 'react';
+import GoogleMap from './GoogleMap';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { MapPin, Search } from 'lucide-react';
 
 const MapView = () => {
+  const [searchLocation, setSearchLocation] = useState('');
+  const [mapCenter, setMapCenter] = useState({ lat: 12.9716, lng: 77.5946 });
+
   const jcbLocations = [
-    { id: 1, name: "JCB 3DX Super", lat: "12.9716", lng: "77.5946", distance: "0.5 km" },
-    { id: 2, name: "JCB 3CX Eco", lat: "12.9700", lng: "77.5950", distance: "1.2 km" },
-    { id: 3, name: "JCB JS220", lat: "12.9680", lng: "77.5920", distance: "2.1 km" }
+    { 
+      id: '1', 
+      lat: 12.9716, 
+      lng: 77.5946, 
+      title: 'JCB 3DX Super - Available', 
+      type: 'operator' as const 
+    },
+    { 
+      id: '2', 
+      lat: 12.9700, 
+      lng: 77.5950, 
+      title: 'JCB 3CX Eco - Available', 
+      type: 'operator' as const 
+    },
+    { 
+      id: '3', 
+      lat: 12.9680, 
+      lng: 77.5920, 
+      title: 'Excavation Project - Active Job', 
+      type: 'job' as const 
+    }
   ];
 
+  const handleLocationSelect = (location: { lat: number; lng: number; address: string }) => {
+    console.log('Selected location:', location);
+    setMapCenter({ lat: location.lat, lng: location.lng });
+  };
+
+  const searchLocation_handler = async () => {
+    if (!searchLocation.trim()) return;
+
+    try {
+      const geocoder = new google.maps.Geocoder();
+      const result = await geocoder.geocode({ address: searchLocation });
+      
+      if (result.results[0]) {
+        const location = result.results[0].geometry.location;
+        setMapCenter({
+          lat: location.lat(),
+          lng: location.lng()
+        });
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+    }
+  };
+
   return (
-    <div className="h-96 bg-gradient-to-br from-blue-100 to-orange-100 relative overflow-hidden">
-      {/* Map placeholder with grid pattern */}
-      <div className="absolute inset-0">
-        <div className="w-full h-full bg-gradient-to-br from-blue-50 to-orange-50 opacity-50"></div>
-        <div className="absolute inset-0" style={{
-          backgroundImage: `repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px 1px, transparent 1px 20px),
-                           repeating-linear-gradient(90deg, rgba(0,0,0,0.1) 0px 1px, transparent 1px 20px)`
-        }}></div>
-      </div>
-      
-      {/* JCB location markers */}
-      {jcbLocations.map((location, index) => (
-        <div
-          key={location.id}
-          className="absolute animate-bounce"
-          style={{
-            left: `${20 + index * 25}%`,
-            top: `${30 + index * 15}%`,
-            animationDelay: `${index * 0.5}s`
-          }}
-        >
-          <div className="bg-orange-500 text-white p-3 rounded-full shadow-lg hover:bg-orange-600 transition-colors cursor-pointer group">
-            <MapPin className="h-6 w-6" />
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-white text-gray-800 px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-              <div className="font-semibold">{location.name}</div>
-              <div className="text-sm text-gray-600">{location.distance}</div>
-            </div>
-          </div>
+    <div className="space-y-4">
+      {/* Search Bar */}
+      <div className="flex gap-2">
+        <div className="flex-1 relative">
+          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500 h-5 w-5" />
+          <Input
+            placeholder="Search for a location..."
+            value={searchLocation}
+            onChange={(e) => setSearchLocation(e.target.value)}
+            className="pl-12"
+            onKeyPress={(e) => e.key === 'Enter' && searchLocation_handler()}
+          />
         </div>
-      ))}
-      
-      {/* User location marker */}
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-        <div className="bg-blue-500 text-white p-3 rounded-full shadow-lg animate-pulse">
-          <Navigation className="h-6 w-6" />
-          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap">
-            Your Location
-          </div>
-        </div>
+        <Button onClick={searchLocation_handler} className="bg-orange-500 hover:bg-orange-600">
+          <Search className="h-4 w-4" />
+        </Button>
       </div>
-      
-      {/* Map controls */}
-      <div className="absolute top-4 left-4 bg-white/80 backdrop-blur-md rounded-lg p-2 shadow-lg">
-        <div className="text-sm font-semibold text-gray-800">Interactive Map</div>
-        <div className="text-xs text-gray-600">Real-time JCB locations</div>
+
+      {/* Map */}
+      <GoogleMap
+        center={mapCenter}
+        zoom={13}
+        markers={jcbLocations}
+        onLocationSelect={handleLocationSelect}
+        height="400px"
+      />
+
+      {/* Legend */}
+      <div className="flex justify-center space-x-6 text-sm">
+        <div className="flex items-center">
+          <div className="w-4 h-4 bg-orange-500 rounded-full mr-2"></div>
+          <span>Available Operators</span>
+        </div>
+        <div className="flex items-center">
+          <div className="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
+          <span>Active Jobs</span>
+        </div>
       </div>
     </div>
   );

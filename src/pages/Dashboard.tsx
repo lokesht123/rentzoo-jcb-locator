@@ -27,7 +27,7 @@ const Dashboard = () => {
   const fetchProfile = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('profiles' as any)
         .select('*')
         .eq('id', user?.id)
         .single();

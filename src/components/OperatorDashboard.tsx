@@ -40,7 +40,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ profile }) => {
     try {
       // Fetch operator profile
       const { data: opProfile } = await supabase
-        .from('operator_profiles')
+        .from('operator_profiles' as any)
         .select('*')
         .eq('user_id', profile.id)
         .single();
@@ -49,7 +49,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ profile }) => {
 
       // Fetch available jobs
       const { data: jobs } = await supabase
-        .from('jobs')
+        .from('jobs' as any)
         .select(`
           *,
           profiles:client_id (
@@ -63,7 +63,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ profile }) => {
 
       // Fetch my bookings
       const { data: bookings } = await supabase
-        .from('bookings')
+        .from('bookings' as any)
         .select(`
           *,
           jobs (*),
@@ -87,8 +87,8 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ profile }) => {
 
     try {
       const { error } = await supabase
-        .from('operator_profiles')
-        .update({ is_available: !operatorProfile.is_available })
+        .from('operator_profiles' as any)
+        .update({ is_available: !operatorProfile.is_available } as any)
         .eq('user_id', profile.id);
 
       if (error) throw error;
@@ -114,13 +114,13 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ profile }) => {
   const applyForJob = async (jobId: string) => {
     try {
       const { error } = await supabase
-        .from('bookings')
+        .from('bookings' as any)
         .insert({
           job_id: jobId,
           operator_id: profile.id,
           client_id: availableJobs.find(job => job.id === jobId)?.client_id,
           status: 'pending'
-        });
+        } as any);
 
       if (error) throw error;
 

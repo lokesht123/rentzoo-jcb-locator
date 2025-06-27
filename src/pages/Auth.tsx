@@ -1,25 +1,30 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { MapPin, User, Wrench } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { MapPin, Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
 
 const Auth = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<'operator' | 'client'>('client');
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [signInForm, setSignInForm] = useState({ email: '', password: '' });
+  const [signUpForm, setSignUpForm] = useState({
+    email: '',
+    password: '',
+    fullName: '',
+    role: '' as 'operator' | 'client'
+  });
   
-  const { signUp, signIn, user } = useAuth();
-  const navigate = useNavigate();
+  const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -27,43 +32,70 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    const { error } = await signUp(email, password, fullName, role);
-    
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "Account created successfully! Please check your email to verify your account."
-      });
-    }
-    
-    setLoading(false);
-  };
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    
-    const { error } = await signIn(email, password);
-    
-    if (error) {
+    setIsLoading(true);
+
+    try {
+      const { error } = await signIn(signInForm.email, signInForm.password);
+      
+      if (error) {
+        toast({
+          title: "Sign In Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You have been signed in successfully."
+        });
+        navigate('/dashboard');
+      }
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: "An unexpected error occurred",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
-    
-    setLoading(false);
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { error } = await signUp(
+        signUpForm.email, 
+        signUpForm.password, 
+        signUpForm.fullName,
+        signUpForm.role
+      );
+      
+      if (error) {
+        toast({
+          title: "Sign Up Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Account Created!",
+          description: "Please check your email to verify your account."
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -78,18 +110,18 @@ const Auth = () => {
               RentZoo
             </span>
           </div>
-          <p className="text-gray-600">Join the equipment rental revolution</p>
+          <p className="text-gray-600">Connect with equipment operators instantly</p>
         </div>
 
         <Card className="bg-white/80 backdrop-blur-md border-white/20 shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-center">Welcome</CardTitle>
+            <CardTitle className="text-center">Welcome to RentZoo</CardTitle>
             <CardDescription className="text-center">
               Sign in to your account or create a new one
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs defaultValue="signin" className="space-y-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -98,31 +130,40 @@ const Auth = () => {
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="signin-email">Email</Label>
                     <Input
-                      id="email"
+                      id="signin-email"
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      value={signInForm.email}
+                      onChange={(e) => setSignInForm({ ...signInForm, email: e.target.value })}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="signin-password">Password</Label>
                     <Input
-                      id="password"
+                      id="signin-password"
                       type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      value={signInForm.password}
+                      onChange={(e) => setSignInForm({ ...signInForm, password: e.target.value })}
                       required
                     />
                   </div>
-                  <Button
-                    type="submit"
+                  <Button 
+                    type="submit" 
                     className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
-                    disabled={loading}
+                    disabled={isLoading}
                   >
-                    {loading ? 'Signing In...' : 'Sign In'}
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing In...
+                      </>
+                    ) : (
+                      'Sign In'
+                    )}
                   </Button>
                 </form>
               </TabsContent>
@@ -130,64 +171,63 @@ const Auth = () => {
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name</Label>
+                    <Label htmlFor="signup-name">Full Name</Label>
                     <Input
-                      id="fullName"
+                      id="signup-name"
                       type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Enter your full name"
+                      value={signUpForm.fullName}
+                      onChange={(e) => setSignUpForm({ ...signUpForm, fullName: e.target.value })}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="signup-email">Email</Label>
                     <Input
-                      id="email"
+                      id="signup-email"
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      value={signUpForm.email}
+                      onChange={(e) => setSignUpForm({ ...signUpForm, email: e.target.value })}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="signup-password">Password</Label>
                     <Input
-                      id="password"
+                      id="signup-password"
                       type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Create a password"
+                      value={signUpForm.password}
+                      onChange={(e) => setSignUpForm({ ...signUpForm, password: e.target.value })}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>I am a...</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        type="button"
-                        variant={role === 'client' ? 'default' : 'outline'}
-                        onClick={() => setRole('client')}
-                        className="flex items-center space-x-2"
-                      >
-                        <User className="h-4 w-4" />
-                        <span>Client</span>
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={role === 'operator' ? 'default' : 'outline'}
-                        onClick={() => setRole('operator')}
-                        className="flex items-center space-x-2"
-                      >
-                        <Wrench className="h-4 w-4" />
-                        <span>Operator</span>
-                      </Button>
-                    </div>
+                    <Label htmlFor="role">I am a...</Label>
+                    <Select value={signUpForm.role} onValueChange={(value: 'operator' | 'client') => setSignUpForm({ ...signUpForm, role: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="client">Client (Need equipment)</SelectItem>
+                        <SelectItem value="operator">Operator (Have equipment)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Button
-                    type="submit"
+                  <Button 
+                    type="submit" 
                     className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                    disabled={loading}
+                    disabled={isLoading}
                   >
-                    {loading ? 'Creating Account...' : 'Create Account'}
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      'Create Account'
+                    )}
                   </Button>
                 </form>
               </TabsContent>

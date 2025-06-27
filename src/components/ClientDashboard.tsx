@@ -53,7 +53,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ profile }) => {
     try {
       // Fetch my jobs
       const { data: jobs } = await supabase
-        .from('jobs')
+        .from('jobs' as any)
         .select('*')
         .eq('client_id', profile.id)
         .order('created_at', { ascending: false });
@@ -62,7 +62,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ profile }) => {
 
       // Fetch available operators
       const { data: operators } = await supabase
-        .from('operator_profiles')
+        .from('operator_profiles' as any)
         .select(`
           *,
           profiles:user_id (
@@ -76,7 +76,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ profile }) => {
 
       // Fetch bookings for my jobs
       const { data: bookingsData } = await supabase
-        .from('bookings')
+        .from('bookings' as any)
         .select(`
           *,
           jobs (*),
@@ -100,13 +100,13 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ profile }) => {
     
     try {
       const { error } = await supabase
-        .from('jobs')
+        .from('jobs' as any)
         .insert({
           ...jobForm,
           client_id: profile.id,
           duration_hours: parseInt(jobForm.duration_hours),
           budget_per_hour: parseFloat(jobForm.budget_per_hour)
-        });
+        } as any);
 
       if (error) throw error;
 
@@ -138,8 +138,8 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ profile }) => {
   const handleBookingResponse = async (bookingId: string, status: 'accepted' | 'rejected') => {
     try {
       const { error } = await supabase
-        .from('bookings')
-        .update({ status })
+        .from('bookings' as any)
+        .update({ status } as any)
         .eq('id', bookingId);
 
       if (error) throw error;
