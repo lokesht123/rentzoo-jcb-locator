@@ -3,10 +3,12 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   const navItems = [
     { name: "Home", path: "/" },
@@ -44,12 +46,25 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
-            <Link to="/auth">
-              <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
-                <Phone className="mr-2 h-4 w-4" />
-                Join RentZoo
-              </Button>
-            </Link>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <Link to="/dashboard">
+                  <Button variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50">
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button onClick={signOut} variant="ghost" className="text-gray-600 hover:text-orange-600">
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <Link to="/auth">
+                <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                  <Phone className="mr-2 h-4 w-4" />
+                  Join RentZoo
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -79,12 +94,25 @@ const Navigation = () => {
                   {item.name}
                 </Link>
               ))}
-              <Link to="/auth">
-                <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 w-full">
-                  <Phone className="mr-2 h-4 w-4" />
-                  Join RentZoo
-                </Button>
-              </Link>
+              {user ? (
+                <div className="flex flex-col space-y-2">
+                  <Link to="/dashboard" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50 w-full">
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button onClick={() => { signOut(); setIsOpen(false); }} variant="ghost" className="text-gray-600 hover:text-orange-600 w-full">
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <Link to="/auth" onClick={() => setIsOpen(false)}>
+                  <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 w-full">
+                    <Phone className="mr-2 h-4 w-4" />
+                    Join RentZoo
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         )}

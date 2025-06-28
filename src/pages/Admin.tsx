@@ -1,104 +1,109 @@
 
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  Users, 
-  Briefcase, 
-  Shield, 
-  CheckCircle, 
-  XCircle,
-  Eye,
-  LogOut
-} from 'lucide-react';
-import Navigation from '@/components/Navigation';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { Users, Briefcase, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 const Admin = () => {
+  const { user, loading: authLoading, signOut } = useAuth();
+  const [profile, setProfile] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [jobs, setJobs] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, signOut } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is admin
-    if (user) {
-      checkAdminAccess();
+    if (!authLoading && !user) {
+      navigate('/auth');
+      return;
     }
-  }, [user]);
 
-  const checkAdminAccess = async () => {
+    if (user) {
+      fetchProfile();
+    }
+  }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (profile && profile.role === 'admin') {
+      fetchData();
+    } else if (profile && profile.role !== 'admin') {
+      navigate('/dashboard');
+    }
+  }, [profile, navigate]);
+
+  const fetchProfile = async () => {
     try {
-      const { data: profile } = await supabase
+      const { data, error } = await supabase
         .from('profiles' as any)
-        .select('role')
+        .select('*')
         .eq('id', user?.id)
         .single();
 
-      if (profile?.role !== 'admin') {
+      if (error) throw error;
+      setProfile(data);
+      
+      if (data?.role !== 'admin') {
         navigate('/dashboard');
-        return;
       }
-
-      fetchAdminData();
     } catch (error) {
-      console.error('Error checking admin access:', error);
+      console.error('Error fetching profile:', error);
       navigate('/dashboard');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchAdminData = async () => {
+  const fetchData = async () => {
     try {
-      // Fetch all users
-      const { data: usersData } = await supabase
+      // Fetch users
+      const { data: usersData, error: usersError } = await supabase
         .from('profiles' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Fetch all jobs
-      const { data: jobsData } = await supabase
+      if (usersError) throw usersError;
+
+      // Fetch jobs
+      const { data: jobsData, error: jobsError } = await supabase
         .from('jobs' as any)
         .select(`
           *,
-          profiles:client_id (
-            full_name,
-            email
-          )
+          profiles!inner(full_name)
         `)
         .order('created_at', { ascending: false });
 
-      // Fetch all bookings
-      const { data: bookingsData } = await supabase
+      if (jobsError) throw jobsError;
+
+      // Fetch bookings
+      const { data: bookingsData, error: bookingsError } = await supabase
         .from('bookings' as any)
         .select(`
           *,
-          jobs (*),
-          operator_profile:operator_id (
-            full_name,
-            email
-          ),
-          client_profile:client_id (
-            full_name,
-            email
-          )
+          jobs(*),
+          operator:operator_id(full_name),
+          client:client_id(full_name)
         `)
         .order('created_at', { ascending: false });
+
+      if (bookingsError) throw bookingsError;
 
       setUsers(usersData || []);
       setJobs(jobsData || []);
       setBookings(bookingsData || []);
     } catch (error) {
       console.error('Error fetching admin data:', error);
-    } finally {
-      setLoading(false);
+      toast({
+        title: "Error",
+        description: "Failed to fetch admin data.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -106,259 +111,210 @@ const Admin = () => {
     try {
       const { error } = await supabase
         .from('profiles' as any)
-        .update({ is_active: !currentStatus } as any)
+        .update({ is_active: !currentStatus })
         .eq('id', userId);
 
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: `User ${!currentStatus ? 'activated' : 'deactivated'} successfully`
+        title: "User Status Updated",
+        description: `User has been ${!currentStatus ? 'activated' : 'deactivated'}.`
       });
 
-      fetchAdminData();
+      fetchData();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update user status",
+        description: "Failed to update user status.",
         variant: "destructive"
       });
     }
   };
 
-  const verifyUser = async (userId: string) => {
-    try {
-      const { error } = await supabase
-        .from('profiles' as any)
-        .update({ is_verified: true } as any)
-        .eq('id', userId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "User verified successfully"
-      });
-
-      fetchAdminData();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to verify user",
-        variant: "destructive"
-      });
-    }
-  };
-
-  if (loading) {
-    return <div className="p-8">Loading admin dashboard...</div>;
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-blue-50 to-slate-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
+      </div>
+    );
   }
 
-  const stats = {
-    totalUsers: users.length,
-    activeUsers: users.filter(u => u.is_active).length,
-    operators: users.filter(u => u.role === 'operator').length,
-    clients: users.filter(u => u.role === 'client').length,
-    totalJobs: jobs.length,
-    activeJobs: jobs.filter(j => j.status === 'open' || j.status === 'in_progress').length,
-    totalBookings: bookings.length,
-    pendingBookings: bookings.filter(b => b.status === 'pending').length
-  };
-
-  return (
-    <>
-      <Navigation />
-      <div className="pt-20 px-4 pb-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-              <p className="text-gray-600">Monitor and manage RentZoo platform</p>
-            </div>
-            <Button variant="outline" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid md:grid-cols-4 gap-6 mb-8">
-            <Card className="bg-white/80 backdrop-blur-md border-white/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Total Users</p>
-                    <p className="text-2xl font-bold text-blue-600">{stats.totalUsers}</p>
-                  </div>
-                  <Users className="h-8 w-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/80 backdrop-blur-md border-white/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Active Jobs</p>
-                    <p className="text-2xl font-bold text-orange-600">{stats.activeJobs}</p>
-                  </div>
-                  <Briefcase className="h-8 w-8 text-orange-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/80 backdrop-blur-md border-white/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Operators</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.operators}</p>
-                  </div>
-                  <Shield className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/80 backdrop-blur-md border-white/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Pending Bookings</p>
-                    <p className="text-2xl font-bold text-yellow-600">{stats.pendingBookings}</p>
-                  </div>
-                  <Eye className="h-8 w-8 text-yellow-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Admin Tabs */}
-          <Tabs defaultValue="users" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="users">Users</TabsTrigger>
-              <TabsTrigger value="jobs">Jobs</TabsTrigger>
-              <TabsTrigger value="bookings">Bookings</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="users">
-              <Card>
-                <CardHeader>
-                  <CardTitle>User Management</CardTitle>
-                  <CardDescription>Manage user accounts and verification</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {users.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <h4 className="font-semibold">{user.full_name}</h4>
-                          <p className="text-sm text-gray-600">{user.email}</p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant={user.role === 'operator' ? 'default' : 'secondary'}>
-                              {user.role}
-                            </Badge>
-                            {user.is_verified && (
-                              <Badge variant="outline" className="text-green-600">
-                                Verified
-                              </Badge>
-                            )}
-                            {!user.is_active && (
-                              <Badge variant="destructive">
-                                Inactive
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          {!user.is_verified && (
-                            <Button
-                              size="sm"
-                              onClick={() => verifyUser(user.id)}
-                              className="bg-green-500 hover:bg-green-600"
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant={user.is_active ? "destructive" : "default"}
-                            onClick={() => toggleUserStatus(user.id, user.is_active)}
-                          >
-                            {user.is_active ? (
-                              <XCircle className="h-4 w-4" />
-                            ) : (
-                              <CheckCircle className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="jobs">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Job Management</CardTitle>
-                  <CardDescription>Monitor all job postings</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {jobs.map((job) => (
-                      <div key={job.id} className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-semibold">{job.title}</h4>
-                          <Badge variant={job.status === 'open' ? 'default' : 'secondary'}>
-                            {job.status}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-2">{job.description}</p>
-                        <p className="text-sm text-gray-500">
-                          Posted by: {job.profiles?.full_name} • Budget: ₹{job.budget_per_hour}/hr
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="bookings">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Booking Management</CardTitle>
-                  <CardDescription>Monitor all booking requests and transactions</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {bookings.map((booking) => (
-                      <div key={booking.id} className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-semibold">{booking.jobs?.title}</h4>
-                          <Badge variant={booking.status === 'accepted' ? 'default' : booking.status === 'pending' ? 'secondary' : 'destructive'}>
-                            {booking.status}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          Operator: {booking.operator_profile?.full_name} • 
-                          Client: {booking.client_profile?.full_name}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          Budget: ₹{booking.jobs?.budget_per_hour}/hr
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+  if (!profile || profile.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-blue-50 to-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Access Denied</h2>
+          <p className="text-gray-600">You don't have admin privileges.</p>
         </div>
       </div>
-    </>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-blue-50 to-slate-50">
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+            <p className="text-gray-600">Welcome, {profile.full_name}</p>
+          </div>
+          <Button onClick={signOut} variant="outline">
+            Sign Out
+          </Button>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{users.length}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {jobs.filter(job => job.status === 'open').length}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{bookings.length}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Operators</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {users.filter(user => user.role === 'operator').length}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Users Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Users Management</CardTitle>
+              <CardDescription>Manage user accounts and permissions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {users.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <h4 className="font-medium">{user.full_name}</h4>
+                      <p className="text-sm text-gray-600">{user.email}</p>
+                      <div className="flex gap-2 mt-1">
+                        <Badge variant={user.role === 'admin' ? 'destructive' : 'default'}>
+                          {user.role}
+                        </Badge>
+                        <Badge variant={user.is_active ? 'default' : 'secondary'}>
+                          {user.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={user.is_active ? "destructive" : "default"}
+                      onClick={() => toggleUserStatus(user.id, user.is_active)}
+                    >
+                      {user.is_active ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Jobs</CardTitle>
+              <CardDescription>Latest job postings and activity</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {jobs.slice(0, 10).map((job) => (
+                  <div key={job.id} className="p-3 border rounded-lg">
+                    <h4 className="font-medium">{job.title}</h4>
+                    <p className="text-sm text-gray-600">{job.description}</p>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-xs text-gray-500">
+                        By: {job.profiles?.full_name}
+                      </span>
+                      <Badge variant={
+                        job.status === 'open' ? 'default' :
+                        job.status === 'assigned' ? 'secondary' :
+                        'outline'
+                      }>
+                        {job.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Bookings Overview */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Recent Bookings</CardTitle>
+            <CardDescription>Latest booking requests and their status</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {bookings.slice(0, 15).map((booking) => (
+                <div key={booking.id} className="p-3 border rounded-lg">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-medium">
+                        {booking.jobs?.title || 'Direct Booking'}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        Operator: {booking.operator?.full_name} | Client: {booking.client?.full_name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(booking.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Badge variant={
+                      booking.status === 'pending' ? 'secondary' :
+                      booking.status === 'accepted' ? 'default' :
+                      booking.status === 'rejected' ? 'destructive' :
+                      'outline'
+                    }>
+                      {booking.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 

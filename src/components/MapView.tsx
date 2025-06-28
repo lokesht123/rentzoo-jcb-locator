@@ -42,15 +42,17 @@ const MapView = () => {
     if (!searchLocation.trim()) return;
 
     try {
-      const geocoder = new google.maps.Geocoder();
-      const result = await geocoder.geocode({ address: searchLocation });
-      
-      if (result.results[0]) {
-        const location = result.results[0].geometry.location;
-        setMapCenter({
-          lat: location.lat(),
-          lng: location.lng()
-        });
+      if (window.google?.maps) {
+        const geocoder = new window.google.maps.Geocoder();
+        const result = await geocoder.geocode({ address: searchLocation });
+        
+        if (result.results[0]) {
+          const location = result.results[0].geometry.location;
+          setMapCenter({
+            lat: location.lat(),
+            lng: location.lng()
+          });
+        }
       }
     } catch (error) {
       console.error('Geocoding error:', error);
