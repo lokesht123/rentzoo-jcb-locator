@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Navigation, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface GoogleMapProps {
   center?: { lat: number; lng: number };
@@ -32,8 +33,12 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const userLocationMarkerRef = useRef<google.maps.Marker | null>(null);
+  const watchIdRef = useRef<number | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isTrackingLocation, setIsTrackingLocation] = useState(false);
 
   useEffect(() => {
     const initializeMap = () => {
@@ -50,7 +55,10 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
               elementType: 'labels',
               stylers: [{ visibility: 'off' }]
             }
-          ]
+          ],
+          mapTypeControl: true,
+          streetViewControl: true,
+          fullscreenControl: true
         });
 
         mapInstanceRef.current = map;
@@ -119,7 +127,124 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     } else {
       initializeMap();
     }
+
+    return () => {
+      // Cleanup location tracking when component unmounts
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
   }, [center, zoom, markers, onLocationSelect]);
+
+  const startLocationTracking = () => {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by this browser');
+      return;
+    }
+
+    setIsTrackingLocation(true);
+    setError(null);
+
+    // Get current position first
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const pos = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        
+        setUserLocation(pos);
+        updateUserLocationOnMap(pos);
+        
+        // Center map on user location
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setCenter(pos);
+          mapInstanceRef.current.setZoom(15);
+        }
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        setError('Unable to retrieve your location');
+        setIsTrackingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+
+    // Watch position for real-time updates
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        const pos = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        
+        setUserLocation(pos);
+        updateUserLocationOnMap(pos);
+      },
+      (error) => {
+        console.error('Error watching location:', error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000
+      }
+    );
+  };
+
+  const stopLocationTracking = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    setIsTrackingLocation(false);
+    
+    // Remove user location marker
+    if (userLocationMarkerRef.current) {
+      userLocationMarkerRef.current.setMap(null);
+      userLocationMarkerRef.current = null;
+    }
+    setUserLocation(null);
+  };
+
+  const updateUserLocationOnMap = (position: { lat: number; lng: number }) => {
+    if (!mapInstanceRef.current || !window.google) return;
+
+    // Remove existing user location marker
+    if (userLocationMarkerRef.current) {
+      userLocationMarkerRef.current.setMap(null);
+    }
+
+    // Create new user location marker
+    userLocationMarkerRef.current = new window.google.maps.Marker({
+      position,
+      map: mapInstanceRef.current,
+      title: 'Your Location',
+      icon: {
+        url: 'data:image/svg+xml;base64,' + btoa(`
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="8" fill="#4285F4" stroke="#ffffff" stroke-width="2"/>
+            <circle cx="12" cy="12" r="3" fill="#ffffff"/>
+          </svg>
+        `),
+        scaledSize: new window.google.maps.Size(24, 24),
+        anchor: new window.google.maps.Point(12, 12)
+      }
+    });
+
+    // Add info window for user location
+    const infoWindow = new window.google.maps.InfoWindow({
+      content: '<div class="p-2"><strong>Your Location</strong><br/>Live tracking active</div>'
+    });
+
+    userLocationMarkerRef.current.addListener('click', () => {
+      infoWindow.open(mapInstanceRef.current, userLocationMarkerRef.current);
+    });
+  };
 
   if (error) {
     return (
@@ -142,6 +267,34 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
         style={{ height }}
         className="rounded-lg border shadow-lg"
       />
+      
+      {/* Live Location Control */}
+      <div className="absolute top-4 right-4 z-10">
+        <Button
+          onClick={isTrackingLocation ? stopLocationTracking : startLocationTracking}
+          size="sm"
+          variant={isTrackingLocation ? "destructive" : "default"}
+          className={`${
+            isTrackingLocation 
+              ? "bg-red-500 hover:bg-red-600" 
+              : "bg-blue-500 hover:bg-blue-600"
+          } text-white shadow-lg`}
+        >
+          <Navigation className={`h-4 w-4 mr-2 ${isTrackingLocation ? 'animate-pulse' : ''}`} />
+          {isTrackingLocation ? 'Stop Live Location' : 'Live Location'}
+        </Button>
+      </div>
+
+      {/* Location Status */}
+      {userLocation && (
+        <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg z-10">
+          <div className="flex items-center text-sm text-gray-700">
+            <MapPin className="h-4 w-4 mr-1 text-blue-500" />
+            <span>Live: {userLocation.lat.toFixed(6)}, {userLocation.lng.toFixed(6)}</span>
+          </div>
+        </div>
+      )}
+
       {!isLoaded && (
         <div 
           className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg"

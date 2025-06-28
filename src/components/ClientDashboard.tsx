@@ -1,45 +1,48 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { MapPin, Clock, User, Phone, MessageSquare } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Plus, Calendar, MapPin, DollarSign, Clock, ArrowLeft, Home } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import Navigation from './Navigation';
 
 const ClientDashboard = ({ profile }: { profile: any }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [jobs, setJobs] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
-  const [availableOperators, setAvailableOperators] = useState<any[]>([]);
-  const [showJobForm, setShowJobForm] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
-  const { signOut } = useAuth();
-
+  const [activeTab, setActiveTab] = useState('jobs');
+  
+  // Job form state
   const [jobForm, setJobForm] = useState({
     title: '',
     description: '',
     equipment_type: '',
     location: '',
     start_date: '',
-    duration_hours: '',
-    budget_per_hour: ''
+    duration_hours: 1,
+    budget_per_hour: 0
   });
 
   useEffect(() => {
     fetchJobs();
     fetchBookings();
-    fetchAvailableOperators();
-  }, []);
+  }, [user]);
 
   const fetchJobs = async () => {
     try {
       const { data, error } = await supabase
         .from('jobs')
         .select('*')
-        .eq('client_id', profile.id)
+        .eq('client_id', user?.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -55,10 +58,10 @@ const ClientDashboard = ({ profile }: { profile: any }) => {
         .from('bookings')
         .select(`
           *,
-          jobs!inner(*),
-          operator:operator_id(full_name, phone)
+          jobs:job_id (title, equipment_type),
+          operator:operator_id (full_name)
         `)
-        .eq('client_id', profile.id)
+        .eq('client_id', user?.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -68,311 +71,308 @@ const ClientDashboard = ({ profile }: { profile: any }) => {
     }
   };
 
-  const fetchAvailableOperators = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('operator_profiles')
-        .select(`
-          *,
-          profiles!inner(*)
-        `)
-        .eq('is_available', true);
-
-      if (error) throw error;
-      setAvailableOperators(data || []);
-    } catch (error) {
-      console.error('Error fetching operators:', error);
-    }
-  };
-
   const handleJobSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
+    
     try {
       const { error } = await supabase
         .from('jobs')
         .insert([{
-          ...jobForm,
-          client_id: profile.id,
-          duration_hours: parseInt(jobForm.duration_hours),
-          budget_per_hour: parseFloat(jobForm.budget_per_hour)
+          client_id: user?.id,
+          ...jobForm
         }]);
 
       if (error) throw error;
-
+      
       toast({
-        title: "Job Posted Successfully",
-        description: "Your job has been posted and operators can now apply."
+        title: "Job Posted Successfully!",
+        description: "Your job has been posted and operators will be able to see it."
       });
-
+      
+      // Reset form
       setJobForm({
         title: '',
         description: '',
         equipment_type: '',
         location: '',
         start_date: '',
-        duration_hours: '',
-        budget_per_hour: ''
+        duration_hours: 1,
+        budget_per_hour: 0
       });
-      setShowJobForm(false);
+      
+      // Refresh jobs list
       fetchJobs();
+      
+      // Switch to jobs tab to show the new job
+      setActiveTab('jobs');
+      
     } catch (error) {
+      console.error('Error posting job:', error);
       toast({
         title: "Error",
         description: "Failed to post job. Please try again.",
         variant: "destructive"
       });
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const handleBookOperator = async (operatorId: string, jobId?: string) => {
-    try {
-      const { error } = await supabase
-        .from('bookings')
-        .insert([{
-          operator_id: operatorId,
-          client_id: profile.id,
-          job_id: jobId,
-          message: 'New booking request'
-        }]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Booking Request Sent",
-        description: "Your booking request has been sent to the operator."
-      });
-
-      fetchBookings();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send booking request.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const getWhatsAppLink = (phone: string) => {
-    const cleanPhone = phone?.replace(/\D/g, '');
-    return `https://wa.me/${cleanPhone}`;
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Client Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {profile.full_name}</p>
-        </div>
-        <Button onClick={signOut} variant="outline">
-          Sign Out
-        </Button>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Job Management */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Job Management</CardTitle>
-            <CardDescription>Post new jobs and manage existing ones</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={() => setShowJobForm(!showJobForm)} 
-              className="mb-4 bg-orange-500 hover:bg-orange-600"
-            >
-              {showJobForm ? 'Cancel' : 'Post New Job'}
-            </Button>
-
-            {showJobForm && (
-              <form onSubmit={handleJobSubmit} className="space-y-4 mb-6">
-                <Input
-                  placeholder="Job Title"
-                  value={jobForm.title}
-                  onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })}
-                  required
-                />
-                <Textarea
-                  placeholder="Job Description"
-                  value={jobForm.description}
-                  onChange={(e) => setJobForm({ ...jobForm, description: e.target.value })}
-                  required
-                />
-                <Select value={jobForm.equipment_type} onValueChange={(value) => setJobForm({ ...jobForm, equipment_type: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Equipment Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="jcb_3dx">JCB 3DX</SelectItem>
-                    <SelectItem value="jcb_3cx">JCB 3CX</SelectItem>
-                    <SelectItem value="excavator">Excavator</SelectItem>
-                    <SelectItem value="bulldozer">Bulldozer</SelectItem>
-                    <SelectItem value="crane">Crane</SelectItem>
-                    <SelectItem value="loader">Loader</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  placeholder="Location"
-                  value={jobForm.location}
-                  onChange={(e) => setJobForm({ ...jobForm, location: e.target.value })}
-                  required
-                />
-                <Input
-                  type="date"
-                  value={jobForm.start_date}
-                  onChange={(e) => setJobForm({ ...jobForm, start_date: e.target.value })}
-                  required
-                />
-                <Input
-                  type="number"
-                  placeholder="Duration (hours)"
-                  value={jobForm.duration_hours}
-                  onChange={(e) => setJobForm({ ...jobForm, duration_hours: e.target.value })}
-                  required
-                />
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="Budget per hour (₹)"
-                  value={jobForm.budget_per_hour}
-                  onChange={(e) => setJobForm({ ...jobForm, budget_per_hour: e.target.value })}
-                  required
-                />
-                <Button type="submit" disabled={loading} className="w-full">
-                  {loading ? 'Posting...' : 'Post Job'}
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-blue-50 to-slate-50">
+      <Navigation />
+      
+      <div className="pt-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Header with back navigation */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <Link to="/">
+                <Button variant="outline" size="sm">
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
                 </Button>
-              </form>
-            )}
-
-            <div className="space-y-3">
-              <h3 className="font-semibold">Your Jobs</h3>
-              {jobs.length === 0 ? (
-                <p className="text-gray-500">No jobs posted yet</p>
-              ) : (
-                jobs.map((job) => (
-                  <div key={job.id} className="p-3 border rounded-lg">
-                    <h4 className="font-medium">{job.title}</h4>
-                    <p className="text-sm text-gray-600">{job.description}</p>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="text-xs text-gray-500">
-                        {job.equipment_type} • ₹{job.budget_per_hour}/hr
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        job.status === 'open' ? 'bg-green-100 text-green-800' :
-                        job.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {job.status}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
+              </Link>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent">
+                Client Dashboard
+              </h1>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Available Operators */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Available Operators</CardTitle>
-            <CardDescription>Browse and contact operators</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {availableOperators.length === 0 ? (
-                <p className="text-gray-500">No operators available</p>
-              ) : (
-                availableOperators.map((operator) => (
-                  <div key={operator.id} className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-medium">{operator.profiles?.full_name}</h4>
-                        <p className="text-sm text-gray-600">
-                          {operator.experience_years} years experience
-                        </p>
-                        <p className="text-sm text-orange-600 font-medium">
-                          ₹{operator.hourly_rate}/hour
-                        </p>
-                      </div>
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                        Available
-                      </span>
-                    </div>
-                    
-                    <p className="text-sm text-gray-700 mb-3">{operator.bio}</p>
-                    
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleBookOperator(operator.user_id)}
-                        className="bg-orange-500 hover:bg-orange-600"
-                      >
-                        Book Now
-                      </Button>
-                      {operator.profiles?.phone && (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => window.open(getWhatsAppLink(operator.profiles.phone), '_blank')}
-                        >
-                          <MessageSquare className="h-4 w-4 mr-1" />
-                          WhatsApp
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
+            <div className="text-sm text-gray-600">
+              Welcome, {profile?.full_name || user?.email}
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Bookings */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Your Bookings</CardTitle>
-          <CardDescription>Track your booking requests</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {bookings.length === 0 ? (
-              <p className="text-gray-500">No bookings yet</p>
-            ) : (
-              bookings.map((booking) => (
-                <div key={booking.id} className="p-3 border rounded-lg">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-medium">
-                        {booking.jobs?.title || 'Direct Booking'}
-                      </h4>
-                      <p className="text-sm text-gray-600">
-                        Operator: {booking.operator?.full_name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(booking.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      booking.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                      booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                      'bg-blue-100 text-blue-800'
-                    }`}>
-                      {booking.status}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
           </div>
-        </CardContent>
-      </Card>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid grid-cols-3 w-full max-w-md">
+              <TabsTrigger value="post">Post Job</TabsTrigger>
+              <TabsTrigger value="jobs">My Jobs</TabsTrigger>
+              <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="post">
+              <Card className="bg-white/80 backdrop-blur-md border-white/20 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Plus className="h-5 w-5 mr-2 text-orange-600" />
+                    Post New Job
+                  </CardTitle>
+                  <CardDescription>
+                    Describe your project and find the right equipment operator
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleJobSubmit} className="space-y-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Job Title</Label>
+                        <Input
+                          id="title"
+                          placeholder="e.g., Excavation for Foundation"
+                          value={jobForm.title}
+                          onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="equipment_type">Equipment Type</Label>
+                        <Select 
+                          value={jobForm.equipment_type} 
+                          onValueChange={(value) => setJobForm({ ...jobForm, equipment_type: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select equipment" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="JCB 3DX Super">JCB 3DX Super</SelectItem>
+                            <SelectItem value="JCB 3CX Eco">JCB 3CX Eco</SelectItem>
+                            <SelectItem value="JCB JS220">JCB JS220</SelectItem>
+                            <SelectItem value="Excavator">Excavator</SelectItem>
+                            <SelectItem value="Bulldozer">Bulldozer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        placeholder="Describe your project requirements..."
+                        value={jobForm.description}
+                        onChange={(e) => setJobForm({ ...jobForm, description: e.target.value })}
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="location">Location</Label>
+                        <Input
+                          id="location"
+                          placeholder="Project location"
+                          value={jobForm.location}
+                          onChange={(e) => setJobForm({ ...jobForm, location: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="start_date">Start Date</Label>
+                        <Input
+                          id="start_date"
+                          type="date"
+                          value={jobForm.start_date}
+                          onChange={(e) => setJobForm({ ...jobForm, start_date: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="duration_hours">Duration (Hours)</Label>
+                        <Input
+                          id="duration_hours"
+                          type="number"
+                          min="1"
+                          value={jobForm.duration_hours}
+                          onChange={(e) => setJobForm({ ...jobForm, duration_hours: parseInt(e.target.value) })}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="budget_per_hour">Budget per Hour (₹)</Label>
+                      <Input
+                        id="budget_per_hour"
+                        type="number"
+                        min="0"
+                        step="100"
+                        value={jobForm.budget_per_hour}
+                        onChange={(e) => setJobForm({ ...jobForm, budget_per_hour: parseFloat(e.target.value) })}
+                        required
+                      />
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                    >
+                      Post Job
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="jobs">
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold">My Posted Jobs</h2>
+                {jobs.length === 0 ? (
+                  <Card className="bg-white/80 backdrop-blur-md border-white/20">
+                    <CardContent className="pt-6">
+                      <div className="text-center text-gray-500">
+                        <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No jobs posted yet</p>
+                        <p className="text-sm">Click on "Post Job" to create your first job posting</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-4">
+                    {jobs.map((job) => (
+                      <Card key={job.id} className="bg-white/80 backdrop-blur-md border-white/20 shadow-lg">
+                        <CardContent className="pt-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 className="font-semibold text-lg">{job.title}</h3>
+                              <p className="text-gray-600">{job.equipment_type}</p>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              job.status === 'open' ? 'bg-green-100 text-green-800' :
+                              job.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
+                              job.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                            </span>
+                          </div>
+                          
+                          <p className="text-gray-700 mb-4">{job.description}</p>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div className="flex items-center text-gray-600">
+                              <MapPin className="h-4 w-4 mr-1" />
+                              {job.location}
+                            </div>
+                            <div className="flex items-center text-gray-600">
+                              <Calendar className="h-4 w-4 mr-1" />
+                              {new Date(job.start_date).toLocaleDateString()}
+                            </div>
+                            <div className="flex items-center text-gray-600">
+                              <Clock className="h-4 w-4 mr-1" />
+                              {job.duration_hours}h
+                            </div>
+                            <div className="flex items-center text-gray-600">
+                              <DollarSign className="h-4 w-4 mr-1" />
+                              ₹{job.budget_per_hour}/hr
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="bookings">
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold">My Bookings</h2>
+                {bookings.length === 0 ? (
+                  <Card className="bg-white/80 backdrop-blur-md border-white/20">
+                    <CardContent className="pt-6">
+                      <div className="text-center text-gray-500">
+                        <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No bookings yet</p>
+                        <p className="text-sm">Operators will send booking requests for your posted jobs</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-4">
+                    {bookings.map((booking) => (
+                      <Card key={booking.id} className="bg-white/80 backdrop-blur-md border-white/20 shadow-lg">
+                        <CardContent className="pt-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 className="font-semibold">{booking.jobs?.title}</h3>
+                              <p className="text-gray-600">Operator: {booking.operator?.full_name}</p>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              booking.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                              booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                            </span>
+                          </div>
+                          
+                          {booking.message && (
+                            <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                              <p className="text-sm text-gray-700">{booking.message}</p>
+                            </div>
+                          )}
+                          
+                          <p className="text-sm text-gray-500">
+                            Requested on {new Date(booking.created_at).toLocaleDateString()}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 };
