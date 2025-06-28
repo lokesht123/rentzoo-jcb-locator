@@ -1,7 +1,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Loader2, Navigation, MapPin } from 'lucide-react';
+import { Loader2, Navigation, MapPin, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface GoogleMapProps {
   center?: { lat: number; lng: number };
@@ -39,6 +41,8 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isTrackingLocation, setIsTrackingLocation] = useState(false);
+  const [customApiKey, setCustomApiKey] = useState('');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
 
   useEffect(() => {
     const initializeMap = () => {
@@ -109,21 +113,37 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
         }
 
         setIsLoaded(true);
+        setError(null);
       } catch (err) {
         console.error('Error initializing map:', err);
-        setError('Failed to load map');
+        setError('Failed to initialize map. Please check your Google Maps API key.');
+        setShowApiKeyInput(true);
       }
+    };
+
+    const loadGoogleMaps = (apiKey: string) => {
+      // Remove existing script if any
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeMap;
+      script.onerror = () => {
+        setError('Failed to load Google Maps. Please check your API key and try again.');
+        setShowApiKeyInput(true);
+      };
+      document.head.appendChild(script);
     };
 
     // Load Google Maps API if not already loaded
     if (!window.google?.maps) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dO4XCFyYdnmJZg&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = initializeMap;
-      script.onerror = () => setError('Failed to load Google Maps');
-      document.head.appendChild(script);
+      const apiKey = customApiKey || 'AIzaSyBFw0Qbyq9zTFTd-tUY6dO4XCFyYdnmJZg';
+      loadGoogleMaps(apiKey);
     } else {
       initializeMap();
     }
@@ -134,7 +154,52 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
         navigator.geolocation.clearWatch(watchIdRef.current);
       }
     };
-  }, [center, zoom, markers, onLocationSelect]);
+  }, [center, zoom, markers, onLocationSelect, customApiKey]);
+
+  const handleApiKeySubmit = () => {
+    if (customApiKey.trim()) {
+      setError(null);
+      setIsLoaded(false);
+      setShowApiKeyInput(false);
+      // Trigger re-initialization with new API key
+      const apiKey = customApiKey;
+      const loadGoogleMaps = (apiKey: string) => {
+        const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+        if (existingScript) {
+          existingScript.remove();
+        }
+
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+          if (!mapRef.current || !window.google) return;
+          try {
+            const map = new window.google.maps.Map(mapRef.current, {
+              center,
+              zoom,
+              mapTypeControl: true,
+              streetViewControl: true,
+              fullscreenControl: true
+            });
+            mapInstanceRef.current = map;
+            setIsLoaded(true);
+            setError(null);
+          } catch (err) {
+            setError('Invalid API key. Please try again.');
+            setShowApiKeyInput(true);
+          }
+        };
+        script.onerror = () => {
+          setError('Failed to load Google Maps. Please check your API key.');
+          setShowApiKeyInput(true);
+        };
+        document.head.appendChild(script);
+      };
+      loadGoogleMaps(apiKey);
+    }
+  };
 
   const startLocationTracking = () => {
     if (!navigator.geolocation) {
@@ -246,7 +311,49 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     });
   };
 
-  if (error) {
+  if (error && showApiKeyInput) {
+    return (
+      <div 
+        className="flex flex-col items-center justify-center bg-gray-100 rounded-lg border p-6"
+        style={{ height }}
+      >
+        <div className="text-center max-w-md">
+          <AlertTriangle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Google Maps API Key Required</h3>
+          <p className="text-sm text-gray-600 mb-4">{error}</p>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="api-key">Enter your Google Maps API Key:</Label>
+              <Input
+                id="api-key"
+                type="text"
+                placeholder="Your Google Maps API Key"
+                value={customApiKey}
+                onChange={(e) => setCustomApiKey(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <Button onClick={handleApiKeySubmit} className="w-full">
+              Load Map
+            </Button>
+            <p className="text-xs text-gray-500">
+              Get your API key from{' '}
+              <a 
+                href="https://console.cloud.google.com/apis/credentials" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                Google Cloud Console
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !showApiKeyInput) {
     return (
       <div 
         className="flex items-center justify-center bg-gray-100 rounded-lg border"
@@ -255,6 +362,13 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
         <div className="text-center">
           <p className="text-red-600 mb-2">Map Loading Error</p>
           <p className="text-sm text-gray-600">{error}</p>
+          <Button 
+            onClick={() => setShowApiKeyInput(true)} 
+            variant="outline" 
+            className="mt-3"
+          >
+            Enter API Key
+          </Button>
         </div>
       </div>
     );
@@ -295,7 +409,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
         </div>
       )}
 
-      {!isLoaded && (
+      {!isLoaded && !error && (
         <div 
           className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg"
           style={{ height }}
