@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -38,7 +37,7 @@ const OperatorDashboard = ({ profile }: { profile: any }) => {
   const fetchOperatorProfile = async () => {
     try {
       const { data, error } = await supabase
-        .from('operator_profiles' as any)
+        .from('operator_profiles')
         .select('*')
         .eq('user_id', profile.id)
         .single();
@@ -65,7 +64,7 @@ const OperatorDashboard = ({ profile }: { profile: any }) => {
   const fetchAvailableJobs = async () => {
     try {
       const { data, error } = await supabase
-        .from('jobs' as any)
+        .from('jobs')
         .select(`
           *,
           profiles!inner(*)
@@ -83,7 +82,7 @@ const OperatorDashboard = ({ profile }: { profile: any }) => {
   const fetchBookings = async () => {
     try {
       const { data, error } = await supabase
-        .from('bookings' as any)
+        .from('bookings')
         .select(`
           *,
           jobs(*),
@@ -117,13 +116,13 @@ const OperatorDashboard = ({ profile }: { profile: any }) => {
 
       if (operatorProfile) {
         const { error } = await supabase
-          .from('operator_profiles' as any)
+          .from('operator_profiles')
           .update(profileData)
           .eq('user_id', profile.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('operator_profiles' as any)
+          .from('operator_profiles')
           .insert([profileData]);
         if (error) throw error;
       }
@@ -148,7 +147,7 @@ const OperatorDashboard = ({ profile }: { profile: any }) => {
   const handleApplyToJob = async (jobId: string) => {
     try {
       const { error } = await supabase
-        .from('bookings' as any)
+        .from('bookings')
         .insert([{
           job_id: jobId,
           operator_id: profile.id,
@@ -176,7 +175,7 @@ const OperatorDashboard = ({ profile }: { profile: any }) => {
   const handleBookingResponse = async (bookingId: string, status: 'accepted' | 'rejected') => {
     try {
       const { error } = await supabase
-        .from('bookings' as any)
+        .from('bookings')
         .update({ status })
         .eq('id', bookingId);
 

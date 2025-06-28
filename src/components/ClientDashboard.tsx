@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -38,7 +37,7 @@ const ClientDashboard = ({ profile }: { profile: any }) => {
   const fetchJobs = async () => {
     try {
       const { data, error } = await supabase
-        .from('jobs' as any)
+        .from('jobs')
         .select('*')
         .eq('client_id', profile.id)
         .order('created_at', { ascending: false });
@@ -53,7 +52,7 @@ const ClientDashboard = ({ profile }: { profile: any }) => {
   const fetchBookings = async () => {
     try {
       const { data, error } = await supabase
-        .from('bookings' as any)
+        .from('bookings')
         .select(`
           *,
           jobs!inner(*),
@@ -72,7 +71,7 @@ const ClientDashboard = ({ profile }: { profile: any }) => {
   const fetchAvailableOperators = async () => {
     try {
       const { data, error } = await supabase
-        .from('operator_profiles' as any)
+        .from('operator_profiles')
         .select(`
           *,
           profiles!inner(*)
@@ -92,7 +91,7 @@ const ClientDashboard = ({ profile }: { profile: any }) => {
 
     try {
       const { error } = await supabase
-        .from('jobs' as any)
+        .from('jobs')
         .insert([{
           ...jobForm,
           client_id: profile.id,
@@ -132,7 +131,7 @@ const ClientDashboard = ({ profile }: { profile: any }) => {
   const handleBookOperator = async (operatorId: string, jobId?: string) => {
     try {
       const { error } = await supabase
-        .from('bookings' as any)
+        .from('bookings')
         .insert([{
           operator_id: operatorId,
           client_id: profile.id,

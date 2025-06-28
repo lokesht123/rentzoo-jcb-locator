@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,7 +40,7 @@ const Admin = () => {
   const fetchProfile = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles' as any)
+        .from('profiles')
         .select('*')
         .eq('id', user?.id)
         .single();
@@ -64,7 +63,7 @@ const Admin = () => {
     try {
       // Fetch users
       const { data: usersData, error: usersError } = await supabase
-        .from('profiles' as any)
+        .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -72,7 +71,7 @@ const Admin = () => {
 
       // Fetch jobs
       const { data: jobsData, error: jobsError } = await supabase
-        .from('jobs' as any)
+        .from('jobs')
         .select(`
           *,
           profiles!inner(full_name)
@@ -83,7 +82,7 @@ const Admin = () => {
 
       // Fetch bookings
       const { data: bookingsData, error: bookingsError } = await supabase
-        .from('bookings' as any)
+        .from('bookings')
         .select(`
           *,
           jobs(*),
@@ -110,7 +109,7 @@ const Admin = () => {
   const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('profiles' as any)
+        .from('profiles')
         .update({ is_active: !currentStatus })
         .eq('id', userId);
 
