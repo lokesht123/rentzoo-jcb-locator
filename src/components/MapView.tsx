@@ -78,7 +78,7 @@ const MapView = () => {
       searchLocation_handler();
     }
   };
-  return <div className="space-y-4 py-0 px-[10px]">
+  return <div className="space-y-4 px-[10px] py-[10px]">
       {/* Search Bar */}
       <div className="flex gap-2">
         <div className="flex-1 relative">
