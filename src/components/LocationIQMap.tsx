@@ -46,6 +46,7 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isTrackingLocation, setIsTrackingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [nearbyDistances, setNearbyDistances] = useState<{ [key: string]: { distance: string; time: string; distanceKm: number } }>({});
   const [selectedMarker, setSelectedMarker] = useState<any>(null);
   const navigate = useNavigate();
@@ -206,6 +207,7 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
   const updateDistances = async (userLat: number, userLng: number) => {
     const distances: { [key: string]: { distance: string; time: string; distanceKm: number } } = {};
     
+    // Clear existing routes
     routeLayersRef.current.forEach(layer => {
       if (mapInstanceRef.current && layer) {
         mapInstanceRef.current.removeLayer(layer);
@@ -216,6 +218,7 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
     let nearestDistance = Infinity;
     let nearestMarkerId = '';
     
+    // Calculate distances and find nearest
     for (const marker of markers) {
       const distance = calculateDistance(userLat, userLng, marker.lat, marker.lng);
       const distanceText = distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)}km`;
@@ -233,6 +236,7 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
     
     setNearbyDistances(distances);
     
+    // Draw routes (green for nearest, blue for others)
     for (const marker of markers) {
       const isNearest = marker.id === nearestMarkerId;
       await drawRoute(userLat, userLng, marker.lat, marker.lng, isNearest);
@@ -240,16 +244,22 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
   };
 
   const startLocationTracking = () => {
+    // Check if geolocation is supported
     if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by this browser');
       setError('Geolocation is not supported by this browser');
       return;
     }
 
+    console.log('Starting location tracking...');
     setIsTrackingLocation(true);
+    setLocationError(null);
     setError(null);
 
+    // Request location permission and get current position
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log('Got location:', position.coords);
         const pos = {
           lat: position.coords.latitude,
           lng: position.coords.longitude
@@ -259,51 +269,91 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
         updateUserLocationOnMap(pos);
         updateDistances(pos.lat, pos.lng);
         
+        // Center map on user location
         if (mapInstanceRef.current) {
           mapInstanceRef.current.setView([pos.lat, pos.lng], 15);
         }
-      },
-      (error) => {
-        console.error('Error getting location:', error);
-        setError('Unable to retrieve your location');
-        setIsTrackingLocation(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      }
-    );
 
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (position) => {
-        const pos = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        };
-        
-        setUserLocation(pos);
-        updateUserLocationOnMap(pos);
-        updateDistances(pos.lat, pos.lng);
+        // Start watching for location changes
+        watchIdRef.current = navigator.geolocation.watchPosition(
+          (position) => {
+            console.log('Location updated:', position.coords);
+            const newPos = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            
+            setUserLocation(newPos);
+            updateUserLocationOnMap(newPos);
+            updateDistances(newPos.lat, newPos.lng);
+          },
+          (error) => {
+            console.error('Error watching location:', error);
+            let errorMessage = 'Unable to track your location';
+            
+            switch(error.code) {
+              case error.PERMISSION_DENIED:
+                errorMessage = 'Location access denied. Please enable location permissions.';
+                break;
+              case error.POSITION_UNAVAILABLE:
+                errorMessage = 'Location information unavailable.';
+                break;
+              case error.TIMEOUT:
+                errorMessage = 'Location request timed out.';
+                break;
+            }
+            
+            setLocationError(errorMessage);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 30000
+          }
+        );
       },
       (error) => {
-        console.error('Error watching location:', error);
+        console.error('Error getting initial location:', error);
+        setIsTrackingLocation(false);
+        
+        let errorMessage = 'Unable to retrieve your location';
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location access denied. Please enable location permissions in your browser settings.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information is unavailable.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out. Please try again.';
+            break;
+        }
+        
+        setLocationError(errorMessage);
+        setError(errorMessage);
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 30000
+        timeout: 15000,
+        maximumAge: 60000
       }
     );
   };
 
   const stopLocationTracking = () => {
+    console.log('Stopping location tracking...');
+    
+    // Clear watch position
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
-    setIsTrackingLocation(false);
     
+    setIsTrackingLocation(false);
+    setLocationError(null);
+    
+    // Clear routes
     routeLayersRef.current.forEach(layer => {
       if (mapInstanceRef.current && layer) {
         mapInstanceRef.current.removeLayer(layer);
@@ -311,10 +361,12 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
     });
     routeLayersRef.current = [];
     
+    // Remove user location marker
     if (userLocationMarkerRef.current && mapInstanceRef.current) {
       mapInstanceRef.current.removeLayer(userLocationMarkerRef.current);
       userLocationMarkerRef.current = null;
     }
+    
     setUserLocation(null);
     setNearbyDistances({});
   };
@@ -322,10 +374,12 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
   const updateUserLocationOnMap = (position: { lat: number; lng: number }) => {
     if (!mapInstanceRef.current || !window.L) return;
 
+    // Remove existing user location marker
     if (userLocationMarkerRef.current) {
       mapInstanceRef.current.removeLayer(userLocationMarkerRef.current);
     }
 
+    // Create user location icon
     const userIcon = window.L.divIcon({
       className: 'user-location-icon',
       html: `<div style="background-color: #4285F4; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); position: relative;">
@@ -335,8 +389,11 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
       iconAnchor: [10, 10]
     });
 
+    // Add new user location marker
     userLocationMarkerRef.current = window.L.marker([position.lat, position.lng], { icon: userIcon })
       .addTo(mapInstanceRef.current);
+
+    console.log('User location marker updated:', position);
   };
 
   const handleBookNow = (marker: any) => {
@@ -350,9 +407,24 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
         className="flex items-center justify-center bg-gray-100 rounded-lg border"
         style={{ height }}
       >
-        <div className="text-center">
-          <p className="text-red-600 mb-2">Map Loading Error</p>
-          <p className="text-sm text-gray-600">{error}</p>
+        <div className="text-center p-4">
+          <p className="text-red-600 mb-2 font-semibold">Map Loading Error</p>
+          <p className="text-sm text-gray-600 mb-4">{error}</p>
+          {locationError && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-3">
+              <p className="text-yellow-800 text-sm">{locationError}</p>
+            </div>
+          )}
+          <Button 
+            onClick={() => {
+              setError(null);
+              setLocationError(null);
+              window.location.reload();
+            }}
+            className="mt-2"
+          >
+            Retry
+          </Button>
         </div>
       </div>
     );
@@ -382,6 +454,20 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
           {isTrackingLocation ? 'Stop Live Location' : 'Live Location'}
         </Button>
       </div>
+
+      {/* Location Error Display */}
+      {locationError && !error && (
+        <div className="absolute top-16 right-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3 shadow-lg z-[999] max-w-xs">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <MapPin className="h-4 w-4 text-yellow-600 mt-0.5" />
+            </div>
+            <div className="ml-2">
+              <p className="text-sm text-yellow-800">{locationError}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Location Status */}
       {userLocation && (
