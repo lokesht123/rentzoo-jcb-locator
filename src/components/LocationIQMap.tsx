@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader2, Navigation, MapPin, X, Phone, Clock, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -54,29 +53,48 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
   const API_KEY = 'pk.5238c69c53717efd6ffccd5ce204f3d7';
 
   useEffect(() => {
-    const loadLeaflet = () => {
-      const cssLink = document.createElement('link');
-      cssLink.rel = 'stylesheet';
-      cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-      cssLink.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
-      cssLink.crossOrigin = '';
-      document.head.appendChild(cssLink);
+    // Cleanup previous map instance if exists
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+    }
 
-      const script = document.createElement('script');
-      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-      script.crossOrigin = '';
-      script.onload = initializeMap;
-      script.onerror = () => {
-        setError('Failed to load map library');
-      };
-      document.head.appendChild(script);
+    const loadLeaflet = () => {
+      // Check if CSS is already loaded
+      if (!document.querySelector('link[href*="leaflet.css"]')) {
+        const cssLink = document.createElement('link');
+        cssLink.rel = 'stylesheet';
+        cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        cssLink.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+        cssLink.crossOrigin = '';
+        document.head.appendChild(cssLink);
+      }
+
+      // Check if script is already loaded
+      if (!window.L) {
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+        script.crossOrigin = '';
+        script.onload = initializeMap;
+        script.onerror = () => {
+          setError('Failed to load map library');
+        };
+        document.head.appendChild(script);
+      } else {
+        initializeMap();
+      }
     };
 
     const initializeMap = () => {
       if (!mapRef.current || !window.L) return;
 
       try {
+        // Clear the container first
+        if (mapRef.current) {
+          mapRef.current.innerHTML = '';
+        }
+
         const map = window.L.map(mapRef.current).setView([center.lat, center.lng], zoom);
 
         window.L.tileLayer(`https://tiles.locationiq.com/v3/streets/r/{z}/{x}/{y}.png?key=${API_KEY}`, {
@@ -126,21 +144,23 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
 
         setIsLoaded(true);
         setError(null);
+        console.log('Map initialized successfully');
       } catch (err) {
         console.error('Error initializing map:', err);
         setError('Failed to initialize map');
       }
     };
 
-    if (!window.L) {
-      loadLeaflet();
-    } else {
-      initializeMap();
-    }
+    loadLeaflet();
 
     return () => {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
       }
     };
   }, [center, zoom, markers, onLocationSelect]);
@@ -169,7 +189,7 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
         const route = data.routes[0];
         const coordinates = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
         
-        const routeColor = isNearest ? '#22C55E' : '#3B82F6'; // Green for nearest, blue for others
+        const routeColor = isNearest ? '#22C55E' : '#3B82F6';
         const routeLine = window.L.polyline(coordinates, {
           color: routeColor,
           weight: 4,
@@ -186,7 +206,6 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
   const updateDistances = async (userLat: number, userLng: number) => {
     const distances: { [key: string]: { distance: string; time: string; distanceKm: number } } = {};
     
-    // Clear existing routes
     routeLayersRef.current.forEach(layer => {
       if (mapInstanceRef.current && layer) {
         mapInstanceRef.current.removeLayer(layer);
@@ -214,7 +233,6 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
     
     setNearbyDistances(distances);
     
-    // Draw routes to all markers
     for (const marker of markers) {
       const isNearest = marker.id === nearestMarkerId;
       await drawRoute(userLat, userLng, marker.lat, marker.lng, isNearest);
@@ -286,7 +304,6 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
     }
     setIsTrackingLocation(false);
     
-    // Clear routes
     routeLayersRef.current.forEach(layer => {
       if (mapInstanceRef.current && layer) {
         mapInstanceRef.current.removeLayer(layer);
@@ -349,8 +366,8 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
         className="rounded-lg border shadow-lg"
       />
       
-      {/* Live Location Control */}
-      <div className="absolute top-4 right-4 z-10">
+      {/* Live Location Control - Fixed positioning with higher z-index */}
+      <div className="absolute top-4 right-4 z-[1000]">
         <Button
           onClick={isTrackingLocation ? stopLocationTracking : startLocationTracking}
           size="sm"
@@ -359,7 +376,7 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
             isTrackingLocation 
               ? "bg-red-500 hover:bg-red-600" 
               : "bg-blue-500 hover:bg-blue-600"
-          } text-white shadow-lg`}
+          } text-white shadow-lg pointer-events-auto`}
         >
           <Navigation className={`h-4 w-4 mr-2 ${isTrackingLocation ? 'animate-pulse' : ''}`} />
           {isTrackingLocation ? 'Stop Live Location' : 'Live Location'}
@@ -368,7 +385,7 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
 
       {/* Location Status */}
       {userLocation && (
-        <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg z-10">
+        <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg z-[999]">
           <div className="flex items-center text-sm text-gray-700">
             <MapPin className="h-4 w-4 mr-1 text-blue-500" />
             <span>Live: {userLocation.lat.toFixed(6)}, {userLocation.lng.toFixed(6)}</span>
@@ -378,7 +395,7 @@ const LocationIQMap: React.FC<LocationIQMapProps> = ({
 
       {/* JCB Details Popup */}
       {selectedMarker && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-[1001]">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-xl font-bold text-gray-800">{selectedMarker.title}</h3>
