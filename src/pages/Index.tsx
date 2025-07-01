@@ -1,4 +1,3 @@
-
 import { MapPin, Search, Clock, Shield, Star, Phone } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -8,46 +7,40 @@ import JCBCard from "@/components/JCBCard";
 import MapView from "@/components/MapView";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-
 const Index = () => {
   const [location, setLocation] = useState("");
-
-  const jcbTypes = [
-    {
-      id: 1,
-      name: "JCB 3DX Super",
-      image: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=500&h=300&fit=crop", // Construction excavator
-      hourlyRate: 1500,
-      features: ["Excavation", "Loading", "Lifting"],
-      available: true,
-      distance: "0.5 km away"
-    },
-    {
-      id: 2,
-      name: "JCB 3CX Eco",
-      image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=500&h=300&fit=crop", // Yellow construction equipment
-      hourlyRate: 1200,
-      features: ["Digging", "Loading", "Grading"],
-      available: true,
-      distance: "1.2 km away"
-    },
-    {
-      id: 3,
-      name: "JCB JS220",
-      image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&h=300&fit=crop", // Heavy excavator
-      hourlyRate: 1800,
-      features: ["Heavy Excavation", "Demolition"],
-      available: false,
-      distance: "2.1 km away"
-    }
-  ];
-
+  const jcbTypes = [{
+    id: 1,
+    name: "JCB 3DX Super",
+    image: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=500&h=300&fit=crop",
+    // Construction excavator
+    hourlyRate: 1500,
+    features: ["Excavation", "Loading", "Lifting"],
+    available: true,
+    distance: "0.5 km away"
+  }, {
+    id: 2,
+    name: "JCB 3CX Eco",
+    image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=500&h=300&fit=crop",
+    // Yellow construction equipment
+    hourlyRate: 1200,
+    features: ["Digging", "Loading", "Grading"],
+    available: true,
+    distance: "1.2 km away"
+  }, {
+    id: 3,
+    name: "JCB JS220",
+    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&h=300&fit=crop",
+    // Heavy excavator
+    hourlyRate: 1800,
+    features: ["Heavy Excavation", "Demolition"],
+    available: false,
+    distance: "2.1 km away"
+  }];
   const handleSearch = () => {
     console.log("Searching for location:", location);
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-blue-50 to-slate-50">
+  return <div className="min-h-screen bg-gradient-to-br from-orange-50 via-blue-50 to-slate-50">
       <Navigation />
       
       {/* Hero Section */}
@@ -85,17 +78,9 @@ const Index = () => {
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500 h-5 w-5" />
-                  <Input
-                    placeholder="Enter your work location..."
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="pl-12 h-12 text-lg border-gray-200"
-                  />
+                  <Input placeholder="Enter your work location..." value={location} onChange={e => setLocation(e.target.value)} className="pl-12 h-12 text-lg border-gray-200" />
                 </div>
-                <Button 
-                  onClick={handleSearch}
-                  className="h-12 px-8 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold"
-                >
+                <Button onClick={handleSearch} className="h-12 px-8 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold">
                   <Search className="mr-2 h-5 w-5" />
                   Find JCBs
                 </Button>
@@ -153,9 +138,7 @@ const Index = () => {
           <p className="text-lg text-gray-600 text-center mb-8">Choose from our premium fleet</p>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {jcbTypes.map((jcb) => (
-              <JCBCard key={jcb.id} jcb={jcb} />
-            ))}
+            {jcbTypes.map(jcb => <JCBCard key={jcb.id} jcb={jcb} />)}
           </div>
         </div>
       </section>
@@ -196,7 +179,7 @@ const Index = () => {
                   Join Now
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-orange-600">
+              <Button size="lg" variant="outline" className="border-white hover:bg-white text-orange-600">
                 <Phone className="mr-2 h-5 w-5" />
                 Call Support
               </Button>
@@ -206,8 +189,6 @@ const Index = () => {
       </section>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
