@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Briefcase, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Users, Briefcase, CheckCircle, XCircle, Loader2, Trash2 } from 'lucide-react';
 
 const Admin = () => {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -25,15 +25,18 @@ const Admin = () => {
     }
 
     if (user) {
+      // Check if user is admin by email
+      if (user.email !== 'lokeshtanavarapu1@gmail.com') {
+        navigate('/dashboard');
+        return;
+      }
       fetchProfile();
     }
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (profile && profile.role === 'admin') {
+    if (profile) {
       fetchData();
-    } else if (profile && profile.role !== 'admin') {
-      navigate('/dashboard');
     }
   }, [profile, navigate]);
 
@@ -47,13 +50,8 @@ const Admin = () => {
 
       if (error) throw error;
       setProfile(data);
-      
-      if (data?.role !== 'admin') {
-        navigate('/dashboard');
-      }
     } catch (error) {
       console.error('Error fetching profile:', error);
-      navigate('/dashboard');
     } finally {
       setLoading(false);
     }
@@ -130,6 +128,54 @@ const Admin = () => {
     }
   };
 
+  const deleteJob = async (jobId: string) => {
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .delete()
+        .eq('id', jobId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Job Deleted",
+        description: "Job has been successfully deleted."
+      });
+
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete job.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteBooking = async (bookingId: string) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Booking Deleted",
+        description: "Booking has been successfully deleted."
+      });
+
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete booking.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-blue-50 to-slate-50 flex items-center justify-center">
@@ -138,7 +184,7 @@ const Admin = () => {
     );
   }
 
-  if (!profile || profile.role !== 'admin') {
+  if (!profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-blue-50 to-slate-50 flex items-center justify-center">
         <div className="text-center">
@@ -255,19 +301,31 @@ const Admin = () => {
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {jobs.slice(0, 10).map((job) => (
                   <div key={job.id} className="p-3 border rounded-lg">
-                    <h4 className="font-medium">{job.title}</h4>
-                    <p className="text-sm text-gray-600">{job.description}</p>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="text-xs text-gray-500">
-                        By: {job.profiles?.full_name}
-                      </span>
-                      <Badge variant={
-                        job.status === 'open' ? 'default' :
-                        job.status === 'assigned' ? 'secondary' :
-                        'outline'
-                      }>
-                        {job.status}
-                      </Badge>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h4 className="font-medium">{job.title}</h4>
+                        <p className="text-sm text-gray-600">{job.description}</p>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-xs text-gray-500">
+                            By: {job.profiles?.full_name}
+                          </span>
+                          <Badge variant={
+                            job.status === 'open' ? 'default' :
+                            job.status === 'assigned' ? 'secondary' :
+                            'outline'
+                          }>
+                            {job.status}
+                          </Badge>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => deleteJob(job.id)}
+                        className="ml-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -287,7 +345,7 @@ const Admin = () => {
               {bookings.slice(0, 15).map((booking) => (
                 <div key={booking.id} className="p-3 border rounded-lg">
                   <div className="flex justify-between items-start">
-                    <div>
+                    <div className="flex-1">
                       <h4 className="font-medium">
                         {booking.jobs?.title || 'Direct Booking'}
                       </h4>
@@ -298,14 +356,23 @@ const Admin = () => {
                         {new Date(booking.created_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <Badge variant={
-                      booking.status === 'pending' ? 'secondary' :
-                      booking.status === 'accepted' ? 'default' :
-                      booking.status === 'rejected' ? 'destructive' :
-                      'outline'
-                    }>
-                      {booking.status}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={
+                        booking.status === 'pending' ? 'secondary' :
+                        booking.status === 'accepted' ? 'default' :
+                        booking.status === 'rejected' ? 'destructive' :
+                        'outline'
+                      }>
+                        {booking.status}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => deleteBooking(booking.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}

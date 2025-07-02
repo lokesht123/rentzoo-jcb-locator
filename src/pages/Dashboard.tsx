@@ -27,6 +27,12 @@ const Dashboard = () => {
 
   const fetchProfile = async () => {
     try {
+      // Check if user is admin by email
+      if (user?.email === 'lokeshtanavarapu1@gmail.com') {
+        navigate('/admin');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
