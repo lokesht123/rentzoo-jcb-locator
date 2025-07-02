@@ -86,6 +86,65 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
+      // Handle hardcoded admin credentials
+      if (email === 'lokeshtanavarapu1@gmail.com' && password === 'RentZoo#12345$') {
+        // First try to sign in normally
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        // If sign in succeeds, return success
+        if (!signInError && signInData.user) {
+          console.log('Admin sign in successful:', signInData);
+          return { error: null };
+        }
+        
+        // If user doesn't exist, create the admin account
+        if (signInError?.message?.includes('Invalid login credentials')) {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/admin`,
+              data: {
+                full_name: 'Admin User',
+                role: 'admin'
+              }
+            }
+          });
+          
+          if (signUpError) {
+            console.error('Admin signup error:', signUpError);
+            return { error: signUpError };
+          }
+          
+          // If signup was successful but needs email confirmation, 
+          // try signing in again (in case email confirmation is disabled)
+          if (signUpData.user && !signUpData.session) {
+            const { data: finalSignIn, error: finalSignInError } = await supabase.auth.signInWithPassword({
+              email,
+              password
+            });
+            
+            if (finalSignInError) {
+              console.error('Final admin sign in error:', finalSignInError);
+              return { error: finalSignInError };
+            }
+            
+            console.log('Admin account created and signed in:', finalSignIn);
+            return { error: null };
+          }
+          
+          console.log('Admin account created:', signUpData);
+          return { error: null };
+        }
+        
+        // Return the original sign-in error if it's not about invalid credentials
+        return { error: signInError };
+      }
+      
+      // Normal sign-in flow for other users
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
