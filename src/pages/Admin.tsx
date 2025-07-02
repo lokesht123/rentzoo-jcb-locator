@@ -26,7 +26,7 @@ const Admin = () => {
 
     if (user) {
       // Check if user is admin by email
-      if (user.email !== 'lokeshtanavarapu1@gmail.com') {
+      if (user.email !== 'lokeshtanavarapu1@gmail.com' && user.email !== 'lokeshtanavarapu2@gmail.com') {
         navigate('/dashboard');
         return;
       }

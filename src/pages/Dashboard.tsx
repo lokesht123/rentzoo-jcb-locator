@@ -28,7 +28,7 @@ const Dashboard = () => {
   const fetchProfile = async () => {
     try {
       // Check if user is admin by email
-      if (user?.email === 'lokeshtanavarapu1@gmail.com') {
+      if (user?.email === 'lokeshtanavarapu1@gmail.com' || user?.email === 'lokeshtanavarapu2@gmail.com') {
         navigate('/admin');
         return;
       }

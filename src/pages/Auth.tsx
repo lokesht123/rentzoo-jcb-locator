@@ -19,7 +19,7 @@ const Auth = () => {
     email: '',
     password: '',
     fullName: '',
-    role: '' as 'operator' | 'client'
+    role: '' as 'operator' | 'client' | 'admin'
   });
   
   const { signIn, signUp, user } = useAuth();
@@ -229,13 +229,14 @@ const Auth = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="role">I am a...</Label>
-                      <Select value={signUpForm.role} onValueChange={(value: 'operator' | 'client') => setSignUpForm({ ...signUpForm, role: value })}>
+                      <Select value={signUpForm.role} onValueChange={(value: 'operator' | 'client' | 'admin') => setSignUpForm({ ...signUpForm, role: value })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select your role" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="client">Client (Need equipment)</SelectItem>
                           <SelectItem value="operator">Operator (Have equipment)</SelectItem>
+                          <SelectItem value="admin">Admin (Manage platform)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
