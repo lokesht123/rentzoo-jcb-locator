@@ -100,6 +100,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { error: null };
         }
         
+        // Handle email not confirmed error for admin
+        if (signInError?.message?.includes('Email not confirmed')) {
+          // Try to resend confirmation and then manually confirm
+          try {
+            await supabase.auth.resend({
+              type: 'signup',
+              email: email,
+            });
+            console.log('Admin email confirmation resent');
+            
+            // For admin, we'll return a custom message asking them to check email
+            // But in a real scenario, you'd want to disable email confirmation in Supabase settings
+            return { 
+              error: { 
+                message: 'Admin account created but needs email confirmation. Please check your email or disable email confirmation in Supabase Auth settings for testing.' 
+              }
+            };
+          } catch (resendError) {
+            console.error('Failed to resend confirmation:', resendError);
+          }
+        }
+        
         // If user doesn't exist, create the admin account
         if (signInError?.message?.includes('Invalid login credentials')) {
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -119,28 +141,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return { error: signUpError };
           }
           
-          // If signup was successful but needs email confirmation, 
-          // try signing in again (in case email confirmation is disabled)
+          console.log('Admin account created:', signUpData);
+          
+          // If the account was created but needs confirmation
           if (signUpData.user && !signUpData.session) {
-            const { data: finalSignIn, error: finalSignInError } = await supabase.auth.signInWithPassword({
-              email,
-              password
-            });
-            
-            if (finalSignInError) {
-              console.error('Final admin sign in error:', finalSignInError);
-              return { error: finalSignInError };
-            }
-            
-            console.log('Admin account created and signed in:', finalSignIn);
-            return { error: null };
+            return { 
+              error: { 
+                message: 'Admin account created! Please check your email to confirm your account, or disable email confirmation in Supabase Auth settings for testing.' 
+              }
+            };
           }
           
-          console.log('Admin account created:', signUpData);
           return { error: null };
         }
         
-        // Return the original sign-in error if it's not about invalid credentials
+        // Return the original sign-in error
         return { error: signInError };
       }
       
