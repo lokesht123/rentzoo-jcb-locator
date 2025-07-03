@@ -37,7 +37,7 @@ const Index = () => {
   const handleSearch = () => {
     console.log("Searching for location:", location);
   };
-  return <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-cyan-50 to-yellow-100">
+  return <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-cyan-50 to-yellow-100 my-[25px]">
       <Navigation />
       
       {/* Hero Section */}
