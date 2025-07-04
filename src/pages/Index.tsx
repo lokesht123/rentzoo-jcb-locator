@@ -1,4 +1,3 @@
-
 import { MapPin, Search, Clock, Shield, Star, Phone } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -8,10 +7,8 @@ import JCBCard from "@/components/JCBCard";
 import MapView from "@/components/MapView";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-
 const Index = () => {
   const [location, setLocation] = useState("");
-  
   const jcbTypes = [{
     id: 1,
     name: "JCB 3DX Super",
@@ -37,26 +34,19 @@ const Index = () => {
     available: false,
     distance: "2.1 km away"
   }];
-
   const handleSearch = () => {
     console.log("Searching for location:", location);
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-cyan-50 to-yellow-100">
+  return <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-cyan-50 to-yellow-100 my-[25px]">
       <Navigation />
       
       {/* Hero Section */}
       <section className="relative pt-32 pb-12 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 to-cyan-600/10 backdrop-blur-3xl"></div>
-        <div className="relative max-w-7xl mx-auto">
+        <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 to-cyan-600/10 backdrop-blur-3xl mx-0 py-[6px] px-[12px] my-[2px]"></div>
+        <div className="relative max-w-7xl mx-auto my-[67px]">
           <div className="text-center mb-8 animate-fade-in">
             <div className="flex items-center justify-center mb-6">
-              <img 
-                src="/lovable-uploads/ff4c2e1a-30c0-403e-b9a3-e50f07e36b24.png" 
-                alt="RentZoo Logo" 
-                className="h-20 w-auto animate-scale-in"
-              />
+              <img src="/lovable-uploads/ff4c2e1a-30c0-403e-b9a3-e50f07e36b24.png" alt="RentZoo Logo" className="h-20 w-auto animate-scale-in" />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-yellow-600 to-cyan-600 bg-clip-text text-transparent mb-4">
               Premium JCB Rentals at Your Fingertips
@@ -85,17 +75,9 @@ const Index = () => {
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-yellow-500 h-5 w-5" />
-                  <Input 
-                    placeholder="Enter your work location..." 
-                    value={location} 
-                    onChange={e => setLocation(e.target.value)} 
-                    className="pl-12 h-12 text-lg border-gray-200 bg-white/70" 
-                  />
+                  <Input placeholder="Enter your work location..." value={location} onChange={e => setLocation(e.target.value)} className="pl-12 h-12 text-lg border-gray-200 bg-white/70" />
                 </div>
-                <Button 
-                  onClick={handleSearch} 
-                  className="h-12 px-8 bg-gradient-to-r from-yellow-500 to-cyan-500 hover:from-yellow-600 hover:to-cyan-600 text-white font-semibold shadow-lg"
-                >
+                <Button onClick={handleSearch} className="h-12 px-8 bg-gradient-to-r from-yellow-500 to-cyan-500 hover:from-yellow-600 hover:to-cyan-600 text-white font-semibold shadow-lg">
                   <Search className="mr-2 h-5 w-5" />
                   Find JCBs
                 </Button>
@@ -204,8 +186,6 @@ const Index = () => {
       </section>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
