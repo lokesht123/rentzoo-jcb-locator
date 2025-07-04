@@ -26,7 +26,7 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
   return <nav className="fixed top-4 left-4 right-4 z-50 bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl rounded-2xl">
       <div className="max-w-7xl mx-auto px-[5px]">
-        <div className="flex justify-between items-center h-16 px-[20px] py-0">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="relative">
