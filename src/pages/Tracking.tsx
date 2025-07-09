@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { MapPin, Clock, Phone, MessageCircle, Navigation, Truck, AlertCircle } from 'lucide-react';
+import { MapPin, Clock, Phone, MessageCircle, Navigation as NavigationIcon, Truck, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -115,7 +114,7 @@ const Tracking = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Navigation className="h-5 w-5 text-yellow-600" />
+                        <NavigationIcon className="h-5 w-5 text-yellow-600" />
                         <div>
                           <p className="text-sm text-gray-600">Destination</p>
                           <p className="font-medium">{activeBooking.destination}</p>
