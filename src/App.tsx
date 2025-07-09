@@ -8,11 +8,16 @@ import Index from "./pages/Index";
 import Services from "./pages/Services";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Reviews from "./pages/Reviews";
+import Tracking from "./pages/Tracking";
+import Pricing from "./pages/Pricing";
+import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from './contexts/AuthContext';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Admin from './pages/Admin';
+import BackToLastVersion from './components/BackToLastVersion';
 
 const queryClient = new QueryClient();
 
@@ -26,6 +31,10 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/services" element={<Services />} />
+            <Route path="/reviews" element={<Reviews />} />
+            <Route path="/tracking" element={<Tracking />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/support" element={<Support />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/auth" element={<Auth />} />
@@ -33,6 +42,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <BackToLastVersion />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
