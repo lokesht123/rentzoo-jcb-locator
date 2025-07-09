@@ -116,6 +116,33 @@ export default {
 					'66%': { 
 						transform: 'translateY(10px) rotate(240deg)' 
 					}
+				},
+				'slide-loader': {
+					'0%': {
+						transform: 'translateX(-100px)'
+					},
+					'80%': {
+						transform: 'translateX(calc(100vw - 200px))'
+					},
+					'100%': {
+						transform: 'translateX(calc(100vw - 200px))'
+					}
+				},
+				'arm-move': {
+					'0%, 100%': {
+						transform: 'rotate(12deg)'
+					},
+					'50%': {
+						transform: 'rotate(25deg)'
+					}
+				},
+				'bucket-tilt': {
+					'0%, 100%': {
+						transform: 'rotate(0deg)'
+					},
+					'50%': {
+						transform: 'rotate(-10deg)'
+					}
 				}
 			},
 			animation: {
@@ -123,7 +150,10 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
 				'scale-in': 'scale-in 0.2s ease-out',
-				'float': 'float 4s ease-in-out infinite'
+				'float': 'float 4s ease-in-out infinite',
+				'slide-loader': 'slide-loader 3s ease-in-out infinite',
+				'arm-move': 'arm-move 2s ease-in-out infinite',
+				'bucket-tilt': 'bucket-tilt 2s ease-in-out infinite'
 			}
 		}
 	},
