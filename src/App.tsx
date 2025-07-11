@@ -20,6 +20,7 @@ import Admin from './pages/Admin';
 import BackToLastVersion from './components/BackToLastVersion';
 import PageLoader from './components/PageLoader';
 import { usePageLoader } from './hooks/usePageLoader';
+import { ThemeProvider } from './components/ThemeProvider';
 
 const queryClient = new QueryClient();
 
@@ -50,15 +51,17 @@ const AppContent = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+    <ThemeProvider defaultTheme="system" storageKey="rentzoo-theme">
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
