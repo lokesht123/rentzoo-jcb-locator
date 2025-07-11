@@ -46,7 +46,7 @@ const Index = () => {
         <div className="relative max-w-7xl mx-auto">
           <div className="text-center mb-8 animate-fade-in">
             <div className="flex items-center justify-center mb-6">
-              <img src="/lovable-uploads/ff4c2e1a-30c0-403e-b9a3-e50f07e36b24.png" alt="RentZoo Logo" className="h-20 w-auto animate-scale-in" />
+              <img src="/lovable-uploads/4e3045f2-fb7b-4dda-9ac1-6939ca9125c8.png" alt="RentZoo Logo" className="h-20 w-auto animate-scale-in" />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-yellow-600 to-cyan-600 bg-clip-text text-transparent mb-4">
               Premium JCB Rentals at Your Fingertips
