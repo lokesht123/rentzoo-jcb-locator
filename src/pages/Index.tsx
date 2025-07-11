@@ -46,7 +46,7 @@ const Index = () => {
         <div className="relative max-w-7xl mx-auto">
           <div className="text-center mb-8 animate-fade-in">
             <div className="flex items-center justify-center mb-6">
-              <img src="/lovable-uploads/4e3045f2-fb7b-4dda-9ac1-6939ca9125c8.png" alt="RentZoo Logo" className="h-20 w-auto animate-scale-in" />
+              <img src="/lovable-uploads/ff4c2e1a-30c0-403e-b9a3-e50f07e36b24.png" alt="RentZoo Logo" className="h-20 w-auto animate-scale-in" />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-yellow-600 to-cyan-600 bg-clip-text text-transparent mb-4">
               Premium JCB Rentals at Your Fingertips
@@ -136,79 +136,6 @@ const Index = () => {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {jcbTypes.map(jcb => <JCBCard key={jcb.id} jcb={jcb} />)}
-          </div>
-        </div>
-      </section>
-
-      {/* Vehicle Zoo Section */}
-      <section className="py-16 px-4 bg-gradient-to-br from-yellow-50/50 to-cyan-50/50">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-4 bg-gradient-to-r from-yellow-600 to-cyan-600 bg-clip-text text-transparent">Our Vehicle Zoo</h2>
-          <p className="text-lg text-gray-600 text-center mb-12">Explore our diverse fleet of construction equipment</p>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            <div className="group">
-              <div className="bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/30 hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                <img src="/lovable-uploads/e453e769-3765-443a-8ee8-1799b594585a.png" alt="John Deere Excavator" className="w-full h-32 object-contain mb-3" />
-                <h3 className="text-sm font-semibold text-gray-800 text-center">Excavator</h3>
-              </div>
-            </div>
-            
-            <div className="group">
-              <div className="bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/30 hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                <img src="/lovable-uploads/23d11582-ecf6-4a50-b689-f08a96286138.png" alt="Aerial Lift Platform" className="w-full h-32 object-contain mb-3" />
-                <h3 className="text-sm font-semibold text-gray-800 text-center">Aerial Lift</h3>
-              </div>
-            </div>
-            
-            <div className="group">
-              <div className="bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/30 hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                <img src="/lovable-uploads/73ad59da-81d3-4f3b-8454-c33afff3476d.png" alt="Bull Backhoe Loader HD76" className="w-full h-32 object-contain mb-3" />
-                <h3 className="text-sm font-semibold text-gray-800 text-center">Backhoe Loader</h3>
-              </div>
-            </div>
-            
-            <div className="group">
-              <div className="bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/30 hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                <img src="/lovable-uploads/9c161dc5-f1e3-4c3a-bac8-a1422c196701.png" alt="Bull Backhoe Loader HD76 4WD" className="w-full h-32 object-contain mb-3" />
-                <h3 className="text-sm font-semibold text-gray-800 text-center">4WD Backhoe</h3>
-              </div>
-            </div>
-            
-            <div className="group">
-              <div className="bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/30 hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                <img src="/lovable-uploads/c007a4a0-63f8-4b72-93ab-fece9636672a.png" alt="Bull Backhoe Loader" className="w-full h-32 object-contain mb-3" />
-                <h3 className="text-sm font-semibold text-gray-800 text-center">Bull Loader</h3>
-              </div>
-            </div>
-            
-            <div className="group">
-              <div className="bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/30 hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                <img src="/lovable-uploads/2910dc89-5027-43ce-88b2-41bd36ca5228.png" alt="Orange Backhoe Loader" className="w-full h-32 object-contain mb-3" />
-                <h3 className="text-sm font-semibold text-gray-800 text-center">Heavy Loader</h3>
-              </div>
-            </div>
-            
-            <div className="group">
-              <div className="bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/30 hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                <img src="/lovable-uploads/d345d5d8-8a27-4fc6-b484-d3da54b0b512.png" alt="New Holland Skid Steer" className="w-full h-32 object-contain mb-3" />
-                <h3 className="text-sm font-semibold text-gray-800 text-center">Skid Steer</h3>
-              </div>
-            </div>
-            
-            <div className="group">
-              <div className="bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/30 hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                <img src="/lovable-uploads/692b8d5a-5d0f-400c-8e64-27b19c6020b0.png" alt="Wheel Loader" className="w-full h-32 object-contain mb-3" />
-                <h3 className="text-sm font-semibold text-gray-800 text-center">Wheel Loader</h3>
-              </div>
-            </div>
-            
-            <div className="group">
-              <div className="bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/30 hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                <img src="/lovable-uploads/767e52cb-aab7-449d-bfd2-62e80386c938.png" alt="LiuGong Mini Excavator" className="w-full h-32 object-contain mb-3" />
-                <h3 className="text-sm font-semibold text-gray-800 text-center">Mini Excavator</h3>
-              </div>
-            </div>
           </div>
         </div>
       </section>

@@ -4,7 +4,6 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { DarkModeToggle } from "@/components/DarkModeToggle";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,16 +24,11 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed top-4 left-4 right-4 z-50 bg-background/20 backdrop-blur-xl border border-border/30 shadow-2xl rounded-2xl">
+    <nav className="fixed top-4 left-4 right-4 z-50 bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl rounded-2xl">
       <div className="max-w-7xl mx-auto px-[5px]">
         <div className="flex justify-between items-center h-16 px-[20px] py-0">
-          {/* Left side - Dark Mode Toggle */}
-          <div className="flex items-center">
-            <DarkModeToggle />
-          </div>
-
-          {/* Center - Logo */}
-          <Link to="/" className="flex items-center space-x-3 group absolute left-1/2 transform -translate-x-1/2">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-3 group">
             <div className="relative">
               <img 
                 src="/lovable-uploads/ff4c2e1a-30c0-403e-b9a3-e50f07e36b24.png" 
@@ -51,7 +45,7 @@ const Navigation = () => {
                 key={item.name}
                 to={item.path}
                 className={`font-medium transition-all duration-300 hover:text-yellow-500 hover:scale-105 ${
-                  isActive(item.path) ? "text-yellow-500 font-semibold" : "text-foreground"
+                  isActive(item.path) ? "text-yellow-500 font-semibold" : "text-gray-700"
                 }`}
               >
                 {item.name}
@@ -60,14 +54,14 @@ const Navigation = () => {
             {user ? (
               <div className="flex items-center space-x-4">
                 <Link to="/dashboard">
-                  <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-950 bg-background/50 backdrop-blur-sm">
+                  <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 bg-white/50 backdrop-blur-sm">
                     Dashboard
                   </Button>
                 </Link>
                 <Button
                   onClick={signOut}
                   variant="ghost"
-                  className="text-muted-foreground hover:text-yellow-600 hover:bg-background/50"
+                  className="text-gray-600 hover:text-yellow-600 hover:bg-white/50"
                 >
                   Sign Out
                 </Button>
@@ -86,7 +80,7 @@ const Navigation = () => {
           <div className="lg:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-md text-foreground hover:text-yellow-600 transition-colors"
+              className="p-2 rounded-md text-gray-700 hover:text-yellow-600 transition-colors"
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -95,14 +89,14 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="lg:hidden py-4 border-t border-border/20">
+          <div className="lg:hidden py-4 border-t border-white/20">
             <div className="flex flex-col space-y-4">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   to={item.path}
                   className={`font-medium transition-colors hover:text-yellow-600 ${
-                    isActive(item.path) ? "text-yellow-600" : "text-foreground"
+                    isActive(item.path) ? "text-yellow-600" : "text-gray-700"
                   }`}
                   onClick={() => setIsOpen(false)}
                 >
@@ -112,7 +106,7 @@ const Navigation = () => {
               {user ? (
                 <div className="flex flex-col space-y-2">
                   <Link to="/dashboard" onClick={() => setIsOpen(false)}>
-                    <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-950 w-full">
+                    <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 w-full">
                       Dashboard
                     </Button>
                   </Link>
@@ -122,7 +116,7 @@ const Navigation = () => {
                       setIsOpen(false);
                     }}
                     variant="ghost"
-                    className="text-muted-foreground hover:text-yellow-600 w-full"
+                    className="text-gray-600 hover:text-yellow-600 w-full"
                   >
                     Sign Out
                   </Button>
