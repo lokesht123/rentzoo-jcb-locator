@@ -38,19 +38,25 @@ const Navigation = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-6">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`font-medium transition-all duration-300 hover:text-yellow-500 hover:scale-105 ${
-                  isActive(item.path) ? "text-yellow-500 font-semibold" : "text-gray-700"
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
+          {/* Desktop Navigation - Centered */}
+          <div className="hidden lg:flex items-center justify-center flex-1">
+            <div className="flex items-center space-x-6">
+              {navItems.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={`font-medium transition-all duration-300 hover:text-yellow-500 hover:scale-105 ${
+                    isActive(item.path) ? "text-yellow-500 font-semibold" : "text-gray-700"
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="hidden lg:flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
                 <Link to="/dashboard">
