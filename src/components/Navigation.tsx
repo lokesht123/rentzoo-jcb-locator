@@ -26,7 +26,7 @@ const Navigation = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-white/30 shadow-lg">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between items-center h-12 px-4 py-0">
+        <div className="flex justify-between items-center h-16 px-4 py-0">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="relative">
@@ -75,13 +75,13 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="lg:hidden absolute top-full right-4 w-64 bg-white/95 backdrop-blur-xl border border-white/30 shadow-xl rounded-xl mt-2 p-4 transform transition-all duration-300 ease-out animate-in slide-in-from-top-5">
-            <div className="flex flex-col space-y-3">
+          <div className="lg:hidden absolute top-full right-0 w-48 bg-white/95 backdrop-blur-xl border border-white/30 shadow-xl rounded-lg p-3 transform transition-all duration-300 ease-out animate-in slide-in-from-top-5">
+            <div className="flex flex-col space-y-2">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`font-medium transition-all duration-200 hover:text-yellow-600 hover:translate-x-1 px-3 py-2 rounded-lg ${
+                  className={`font-medium transition-all duration-200 hover:text-yellow-600 hover:translate-x-1 px-2 py-1.5 rounded-lg text-sm ${
                     isActive(item.path) ? "text-yellow-600 bg-yellow-50" : "text-gray-700 hover:bg-gray-50"
                   }`}
                   onClick={() => setIsOpen(false)}
@@ -89,7 +89,7 @@ const Navigation = () => {
                   {item.name}
                 </Link>
               ))}
-              <Button className="w-full bg-gradient-to-r from-yellow-500 to-cyan-500 text-white mt-3 transition-all duration-200 hover:scale-105">
+              <Button className="w-full bg-gradient-to-r from-yellow-500 to-cyan-500 text-white mt-2 transition-all duration-200 hover:scale-105 text-sm py-1.5">
                 Get Started
               </Button>
             </div>
