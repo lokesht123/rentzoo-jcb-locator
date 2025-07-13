@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import JCBCard from "@/components/JCBCard";
-import MapView from "@/components/MapView";
+
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 const Index = () => {
@@ -55,13 +55,11 @@ const Index = () => {
               Book construction equipment instantly. Pay by the hour. Professional service guaranteed.
             </p>
             
-            {/* Login/Signup Buttons */}
+            {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Link to="/auth">
-                <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-cyan-500 hover:from-yellow-600 hover:to-cyan-600 text-white font-semibold px-8 shadow-xl">
-                  Sign In / Sign Up
-                </Button>
-              </Link>
+              <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-cyan-500 hover:from-yellow-600 hover:to-cyan-600 text-white font-semibold px-8 shadow-xl">
+                Get Started
+              </Button>
               <Button size="lg" variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50">
                 <Phone className="mr-2 h-5 w-5" />
                 Call Support
@@ -87,17 +85,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Map Section */}
-      <section className="py-8 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-6 bg-gradient-to-r from-yellow-600 to-cyan-600 bg-clip-text text-transparent">
-            Available JCBs Near You
-          </h2>
-          <div className="bg-white/60 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl border border-white/30">
-            <MapView />
-          </div>
-        </div>
-      </section>
 
       {/* Features */}
       <section className="py-12 px-4">
@@ -171,11 +158,9 @@ const Index = () => {
             <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
             <p className="text-lg mb-6 opacity-90">Join thousands of contractors who trust RentZoo</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/auth">
-                <Button size="lg" variant="secondary" className="bg-white text-yellow-600 hover:bg-gray-100 shadow-lg">
-                  Join Now
-                </Button>
-              </Link>
+              <Button size="lg" variant="secondary" className="bg-white text-yellow-600 hover:bg-gray-100 shadow-lg">
+                Join Now
+              </Button>
               <Button size="lg" variant="outline" className="border-white hover:bg-white text-yellow-600">
                 <Phone className="mr-2 h-5 w-5" />
                 Call Support

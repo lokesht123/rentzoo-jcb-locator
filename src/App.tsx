@@ -13,10 +13,6 @@ import Tracking from "./pages/Tracking";
 import Pricing from "./pages/Pricing";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
-import { AuthProvider } from './contexts/AuthContext';
-import Auth from './pages/Auth';
-import Dashboard from './pages/Dashboard';
-import Admin from './pages/Admin';
 import BackToLastVersion from './components/BackToLastVersion';
 import PageLoader from './components/PageLoader';
 import { usePageLoader } from './hooks/usePageLoader';
@@ -38,9 +34,6 @@ const AppContent = () => {
         <Route path="/support" element={<Support />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BackToLastVersion />
@@ -50,15 +43,13 @@ const AppContent = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 

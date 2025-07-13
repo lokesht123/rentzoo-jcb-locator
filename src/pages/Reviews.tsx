@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import { useAuth } from '@/contexts/AuthContext';
+
 import { useToast } from '@/hooks/use-toast';
 
 const Reviews = () => {
@@ -60,7 +60,7 @@ const Reviews = () => {
 
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const { user } = useAuth();
+  const user = null; // No auth for now
   const { toast } = useToast();
 
   const renderStars = (rating: number) => {

@@ -3,12 +3,12 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  
 
   const navItems = [
     { name: "Home", path: "/" },
@@ -55,31 +55,11 @@ const Navigation = () => {
             </div>
           </div>
 
-          {/* Auth Buttons */}
+          {/* CTA Button */}
           <div className="hidden lg:flex items-center space-x-4">
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <Link to="/dashboard">
-                  <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 bg-white/50 backdrop-blur-sm">
-                    Dashboard
-                  </Button>
-                </Link>
-                <Button
-                  onClick={signOut}
-                  variant="ghost"
-                  className="text-gray-600 hover:text-yellow-600 hover:bg-white/50"
-                >
-                  Sign Out
-                </Button>
-              </div>
-            ) : (
-              <Link to="/auth">
-                <Button className="bg-gradient-to-r from-yellow-500 to-cyan-500 hover:from-yellow-600 hover:to-cyan-600 text-white shadow-lg">
-                  <Phone className="mr-2 h-4 w-4" />
-                  Join RentZoo
-                </Button>
-              </Link>
-            )}
+            <Button className="bg-gradient-to-r from-yellow-500 to-cyan-500 hover:from-yellow-600 hover:to-cyan-600 text-white">
+              Get Started
+            </Button>
           </div>
 
           {/* Mobile menu button */}
@@ -109,32 +89,9 @@ const Navigation = () => {
                   {item.name}
                 </Link>
               ))}
-              {user ? (
-                <div className="flex flex-col space-y-2">
-                  <Link to="/dashboard" onClick={() => setIsOpen(false)}>
-                    <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 w-full">
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <Button
-                    onClick={() => {
-                      signOut();
-                      setIsOpen(false);
-                    }}
-                    variant="ghost"
-                    className="text-gray-600 hover:text-yellow-600 w-full"
-                  >
-                    Sign Out
-                  </Button>
-                </div>
-              ) : (
-                <Link to="/auth" onClick={() => setIsOpen(false)}>
-                  <Button className="bg-gradient-to-r from-yellow-500 to-cyan-500 hover:from-yellow-600 hover:to-cyan-600 w-full">
-                    <Phone className="mr-2 h-4 w-4" />
-                    Join RentZoo
-                  </Button>
-                </Link>
-              )}
+              <Button className="w-full bg-gradient-to-r from-yellow-500 to-cyan-500 text-white">
+                Get Started
+              </Button>
             </div>
           </div>
         )}

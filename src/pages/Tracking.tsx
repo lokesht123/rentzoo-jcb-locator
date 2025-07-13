@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import { useAuth } from '@/contexts/AuthContext';
+
 
 const Tracking = () => {
   const [activeBooking, setActiveBooking] = useState({
@@ -32,7 +32,7 @@ const Tracking = () => {
     ]
   });
 
-  const { user } = useAuth();
+  const user = null; // No auth for now
 
   const getStatusColor = (status: string) => {
     switch (status) {
