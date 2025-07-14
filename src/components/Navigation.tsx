@@ -24,9 +24,9 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-white/30 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16 px-4 py-0">
+    <nav className="fixed top-4 left-4 right-4 z-50 bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl rounded-2xl">
+      <div className="max-w-7xl mx-auto px-[5px]">
+        <div className="flex justify-between items-center h-16 px-[20px] py-0">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="relative">
@@ -40,7 +40,7 @@ const Navigation = () => {
 
           {/* Desktop Navigation - Centered */}
           <div className="hidden lg:flex items-center justify-center flex-1">
-            <div className="flex items-center justify-center space-x-8">
+            <div className="flex items-center space-x-6">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
@@ -75,21 +75,21 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="lg:hidden absolute top-full right-0 w-48 bg-white/95 backdrop-blur-xl border border-white/30 shadow-xl rounded-lg p-3 transform transition-all duration-300 ease-out animate-in slide-in-from-top-5">
-            <div className="flex flex-col space-y-2">
+          <div className="lg:hidden py-4 border-t border-white/20">
+            <div className="flex flex-col space-y-4">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`font-medium transition-all duration-200 hover:text-yellow-600 hover:translate-x-1 px-2 py-1.5 rounded-lg text-sm ${
-                    isActive(item.path) ? "text-yellow-600 bg-yellow-50" : "text-gray-700 hover:bg-gray-50"
+                  className={`font-medium transition-colors hover:text-yellow-600 ${
+                    isActive(item.path) ? "text-yellow-600" : "text-gray-700"
                   }`}
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
                 </Link>
               ))}
-              <Button className="w-full bg-gradient-to-r from-yellow-500 to-cyan-500 text-white mt-2 transition-all duration-200 hover:scale-105 text-sm py-1.5">
+              <Button className="w-full bg-gradient-to-r from-yellow-500 to-cyan-500 text-white">
                 Get Started
               </Button>
             </div>
