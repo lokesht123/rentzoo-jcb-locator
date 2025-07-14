@@ -75,8 +75,8 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="lg:hidden py-4 border-t border-white/20 relative">
-            <div className="flex flex-col space-y-4 ml-auto w-fit min-w-[120px] pr-4">
+          <div className="lg:hidden absolute right-4 top-full mt-0 bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl rounded-2xl py-4 w-fit min-w-[120px]">
+            <div className="flex flex-col space-y-4 px-4">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
