@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import JCBCard from "@/components/JCBCard";
 
+import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 const Index = () => {
   const [location, setLocation] = useState("");
@@ -37,6 +38,7 @@ const Index = () => {
     console.log("Searching for location:", location);
   };
   return <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-cyan-50 to-yellow-100">
+      <Navigation />
       
       {/* Hero Section */}
       <section className="relative pt-32 pb-12 px-4 overflow-hidden py-[220px]">
