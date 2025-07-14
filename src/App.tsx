@@ -13,6 +13,7 @@ import Pricing from "./pages/Pricing";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 import BackToLastVersion from './components/BackToLastVersion';
+import Navigation from './components/Navigation';
 import PageLoader from './components/PageLoader';
 import { usePageLoader } from './hooks/usePageLoader';
 
@@ -20,21 +21,28 @@ const AppContent = () => {
   const isLoading = usePageLoader();
 
   return (
-    <>
-      {isLoading && <PageLoader />}
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/reviews" element={<Reviews />} />
-        <Route path="/tracking" element={<Tracking />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/support" element={<Support />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+    <div className="min-h-screen">
+      {/* Navigation remains persistent and visible */}
+      <Navigation />
+      
+      {/* Page content with loading overlay */}
+      <div className="relative">
+        {isLoading && <PageLoader />}
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/reviews" element={<Reviews />} />
+          <Route path="/tracking" element={<Tracking />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+      
       <BackToLastVersion />
-    </>
+    </div>
   );
 };
 
