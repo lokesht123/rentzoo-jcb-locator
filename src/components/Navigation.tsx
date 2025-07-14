@@ -1,15 +1,13 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Phone } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   
-
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Services", path: "/services" },
@@ -23,17 +21,23 @@ const Navigation = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  // Calculate dropdown width based on longest item name
+  const longestItemName = navItems.reduce((longest, item) => 
+    item.name.length > longest.length ? item.name : longest, ""
+  );
+  const dropdownWidth = Math.max(longestItemName.length * 8 + 32, 120); // min 120px
+
   return (
     <nav className="fixed top-4 left-4 right-4 z-50 bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl rounded-2xl">
       <div className="max-w-7xl mx-auto px-[5px]">
-        <div className="flex justify-between items-center h-16 px-[20px] py-0">
+        <div className="flex justify-between items-center h-14 px-[20px] py-0">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="relative">
               <img 
                 src="/lovable-uploads/ff4c2e1a-30c0-403e-b9a3-e50f07e36b24.png" 
                 alt="RentZoo Logo" 
-                className="h-10 w-auto group-hover:scale-105 transition-transform duration-300" 
+                className="h-9 w-auto group-hover:scale-105 transition-transform duration-300" 
               />
             </div>
           </Link>
@@ -76,12 +80,15 @@ const Navigation = () => {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="lg:hidden py-4 border-t border-white/20">
-            <div className="flex flex-col space-y-4">
+            <div 
+              className="flex flex-col space-y-3 ml-auto"
+              style={{ width: `${dropdownWidth}px` }}
+            >
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`font-medium transition-colors hover:text-yellow-600 ${
+                  className={`font-medium transition-colors hover:text-yellow-600 text-center py-1 ${
                     isActive(item.path) ? "text-yellow-600" : "text-gray-700"
                   }`}
                   onClick={() => setIsOpen(false)}
@@ -89,9 +96,6 @@ const Navigation = () => {
                   {item.name}
                 </Link>
               ))}
-              <Button className="w-full bg-gradient-to-r from-yellow-500 to-cyan-500 text-white">
-                Get Started
-              </Button>
             </div>
           </div>
         )}
