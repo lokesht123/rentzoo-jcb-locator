@@ -12,6 +12,7 @@ import Tracking from "./pages/Tracking";
 import Pricing from "./pages/Pricing";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
+import Navigation from "./components/Navigation";
 import BackToLastVersion from './components/BackToLastVersion';
 import PageLoader from './components/PageLoader';
 import { usePageLoader } from './hooks/usePageLoader';
@@ -21,6 +22,7 @@ const AppContent = () => {
 
   return (
     <>
+      <Navigation />
       {isLoading && <PageLoader />}
       <Routes>
         <Route path="/" element={<Index />} />

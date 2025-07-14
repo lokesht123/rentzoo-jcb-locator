@@ -26,7 +26,7 @@ const Navigation = () => {
   return (
     <nav className="fixed top-4 left-4 right-4 z-50 bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl rounded-2xl">
       <div className="max-w-7xl mx-auto px-[5px]">
-        <div className="flex justify-between items-center h-16 px-[20px] py-0">
+        <div className="flex justify-between items-center h-14 px-[20px] py-0">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="relative">
@@ -75,8 +75,8 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="lg:hidden py-4 border-t border-white/20">
-            <div className="flex flex-col space-y-4">
+          <div className="lg:hidden py-4 border-t border-white/20 relative">
+            <div className="flex flex-col space-y-4 ml-auto w-fit min-w-[120px] pr-4">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
@@ -89,9 +89,6 @@ const Navigation = () => {
                   {item.name}
                 </Link>
               ))}
-              <Button className="w-full bg-gradient-to-r from-yellow-500 to-cyan-500 text-white">
-                Get Started
-              </Button>
             </div>
           </div>
         )}
